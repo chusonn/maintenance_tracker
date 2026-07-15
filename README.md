@@ -84,4 +84,6 @@ Design decisions worth noting:
 
 ## License
 
-Personal portfolio project — no license granted for reuse yet.
+Copyright © 2026 Ralph Chu. All rights reserved.
+
+This code is published for portfolio viewing only — no permission is granted to use, copy, or redistribute it. See [LICENSE](LICENSE) for details.
