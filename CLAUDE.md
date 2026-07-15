@@ -31,7 +31,7 @@ App-factory + blueprints (Flask 3.1, SQLAlchemy 2.0 style — `Mapped` models, `
 
 ### Roadmap (agreed with Ralph, July 2026)
 
-Portfolio upgrade in phases — **all complete (July 2026)**: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ ~~(4) full UI redesign — clean SaaS design system~~ ✔ ~~(5) analytics page with Chart.js~~ ✔ ~~(6) README + screenshots (`docs/screenshots/`, taken on seeded scratch DB)~~ ✔. Not yet pushed to GitHub — the README's CI badge assumes `chusonn/maintenance_tracker`; fix the URL if the repo name differs.
+Portfolio upgrade in phases — **all complete (July 2026)**: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ ~~(4) full UI redesign — clean SaaS design system~~ ✔ ~~(5) analytics page with Chart.js~~ ✔ ~~(6) README + screenshots (`docs/screenshots/`, taken on seeded scratch DB)~~ ✔. Public on GitHub since July 2026: `github.com/chusonn/maintenance_tracker` (remote `origin`), CI green.
 
 ## Domain conventions
 
