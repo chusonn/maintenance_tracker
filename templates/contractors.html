@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Contractors - Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-users"></i> Contractors</h1>
+            <a href="{{ url_for('add_contractor') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Contractor
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Specialty</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Active Jobs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contractor in contractors %}
+                            <tr>
+                                <td><strong>{{ contractor.name }}</strong></td>
+                                <td>{{ contractor.company or '-' }}</td>
+                                <td><span class="badge bg-info">{{ contractor.specialty }}</span></td>
+                                <td>{{ contractor.email or '-' }}</td>
+                                <td>{{ contractor.phone or '-' }}</td>
+                                <td>
+                                    {% set active_jobs = contractor.maintenance_jobs | selectattr('status', 'in', ['Scheduled', 'In Progress']) | list %}
+                                    <span class="badge bg-primary">{{ active_jobs | length }}</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewContractorDetails('{{ contractor.id }}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if not contractors %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No contractors have been added yet.</p>
+                    <a href="{{ url_for('add_contractor') }}" class="btn btn-primary">Add Your First Contractor</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contractor Details Modal -->
+<div class="modal fade" id="contractorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contractor Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contractorDetails">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewContractorDetails(contractorId) {
+    // Find the contractor data from the page
+    const contractorRows = document.querySelectorAll('tbody tr');
+    let contractor = null;
+    
+    contractorRows.forEach(row => {
+        const viewBtn = row.querySelector('button[onclick*="' + contractorId + '"]');
+        if (viewBtn) {
+            const cells = row.querySelectorAll('td');
+            contractor = {
+                id: contractorId,
+                name: cells[0].textContent.trim(),
+                company: cells[1].textContent.trim() === '-' ? null : cells[1].textContent.trim(),
+                specialty: cells[2].textContent.trim(),
+                email: cells[3].textContent.trim() === '-' ? null : cells[3].textContent.trim(),
+                phone: cells[4].textContent.trim() === '-' ? null : cells[4].textContent.trim()
+            };
+        }
+    });
+    
+    if (contractor) {
+        const details = `
+            <div class="row">
+                <div class="col-md-6"><strong>Name:</strong></div>
+                <div class="col-md-6">${contractor.name}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6"><strong>Company:</strong></div>
+                <div class="col-md-6">${contractor.company || '-'}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6"><strong>Specialty:</strong></div>
+                <div class="col-md-6">${contractor.specialty}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6"><strong>Email:</strong></div>
+                <div class="col-md-6">${contractor.email || '-'}</div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6"><strong>Phone:</strong></div>
+                <div class="col-md-6">${contractor.phone || '-'}</div>
+            </div>
+        `;
+        
+        document.getElementById('contractorDetails').innerHTML = details;
+        new bootstrap.Modal(document.getElementById('contractorModal')).show();
+    }
+}
+</script>
+{% endblock %}

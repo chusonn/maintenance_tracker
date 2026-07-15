@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Add Contractor - Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-plus"></i> Add New Contractor</h1>
+        <p class="text-muted">Add a new contractor to your network</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Contractor Name *</label>
+                                <input type="text" name="name" id="name" class="form-control" required 
+                                       placeholder="John Smith">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="company" class="form-label">Company</label>
+                                <input type="text" name="company" id="company" class="form-control" 
+                                       placeholder="Smith Plumbing Services">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="specialty" class="form-label">Specialty *</label>
+                        <select name="specialty" id="specialty" class="form-select" required>
+                            <option value="">Select specialty</option>
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="HVAC">HVAC</option>
+                            <option value="Carpentry">Carpentry</option>
+                            <option value="Painting">Painting</option>
+                            <option value="Appliance Repair">Appliance Repair</option>
+                            <option value="General Maintenance">General Maintenance</option>
+                            <option value="Roofing">Roofing</option>
+                            <option value="Pest Control">Pest Control</option>
+                            <option value="Landscaping">Landscaping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" name="email" id="email" class="form-control" 
+                                       placeholder="john.smith@email.com">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone *</label>
+                                <input type="tel" name="phone" id="phone" class="form-control" required 
+                                       placeholder="+1 234 567 8900">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('contractors') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Contractor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Why Add Contractors?</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Building a network of reliable contractors makes scheduling maintenance work much easier.</p>
+                <hr>
+                <h6>Benefits:</h6>
+                <ul class="small">
+                    <li>Quick job assignment</li>
+                    <li>Track contractor performance</li>
+                    <li>Maintain contact information</li>
+                    <li>Specialty-based filtering</li>
+                    <li>Cost tracking per contractor</li>
+                </ul>
+                <hr>
+                <h6>Tips:</h6>
+                <ul class="small">
+                    <li>Add multiple contractors per specialty</li>
+                    <li>Keep contact information updated</li>
+                    <li>Note their availability preferences</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Send Follow-up - Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-envelope"></i> Send Follow-up</h1>
+        <p class="text-muted">Record follow-up communication with contractor</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-home"></i> {{ job.flat.payment_reference }} - {{ job.flat.flat_number or 'No Flat No' }}</h5>
+                    <p class="mb-1"><strong>Address:</strong> {{ job.flat.address }}</p>
+                    <p class="mb-1"><strong>Job:</strong> {{ job.title }}</p>
+                    <p class="mb-1"><strong>Priority:</strong> 
+                        {% if job.priority == 'Urgent' %}
+                            <span class="badge bg-danger">{{ job.priority }}</span>
+                        {% elif job.priority == 'High' %}
+                            <span class="badge bg-warning">{{ job.priority }}</span>
+                        {% elif job.priority == 'Medium' %}
+                            <span class="badge bg-info">{{ job.priority }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ job.priority }}</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1"><strong>Status:</strong> 
+                        {% if job.status == 'Completed' %}
+                            <span class="badge bg-success">{{ job.status }}</span>
+                        {% elif job.status == 'In Progress' %}
+                            <span class="badge bg-primary">{{ job.status }}</span>
+                        {% elif job.status == 'Scheduled' %}
+                            <span class="badge bg-info">{{ job.status }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ job.status }}</span>
+                        {% endif %}
+                    </p>
+                    {% if job.contractor %}
+                    <p class="mb-1"><strong>Contractor:</strong> {{ job.contractor.name }}</p>
+                    {% endif %}
+                    {% if job.description %}
+                    <p class="mb-0"><strong>Description:</strong> {{ job.description }}</p>
+                    {% endif %}
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="follow_up_notes" class="form-label">Follow-up Notes *</label>
+                        <textarea name="follow_up_notes" id="follow_up_notes" class="form-control" rows="6" required
+                                  placeholder="Record details of your communication with the contractor..."></textarea>
+                        <div class="form-text">
+                            Include information about what was discussed, any commitments made, and next steps.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light">
+                        <h6><i class="fas fa-lightbulb"></i> Follow-up Tips</h6>
+                        <ul class="small mb-0">
+                            <li>Document the date and method of communication (phone, email, text)</li>
+                            <li>Note any timeline commitments from the contractor</li>
+                            <li>Record any additional information or requirements discovered</li>
+                            <li>Mention if tenant was updated about the communication</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('jobs') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-envelope"></i> Mark Follow-up as Sent
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        {% if job.contractor %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Contractor Contact</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Name:</strong> {{ job.contractor.name }}</p>
+                {% if job.contractor.company %}
+                <p class="mb-1"><strong>Company:</strong> {{ job.contractor.company }}</p>
+                {% endif %}
+                <p class="mb-1"><strong>Specialty:</strong> {{ job.contractor.specialty }}</p>
+                <p class="mb-1"><strong>Phone:</strong> {{ job.contractor.phone }}</p>
+                {% if job.contractor.email %}
+                <p class="mb-0"><strong>Email:</strong> {{ job.contractor.email }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Job Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Reported:</small><br>
+                    <strong>{{ job.reported_date.strftime('%Y-%m-%d') if job.reported_date else 'Not set' }}</strong>
+                </div>
+                {% if job.scheduled_date %}
+                <div class="mb-2">
+                    <small class="text-muted">Scheduled:</small><br>
+                    <strong>{{ job.scheduled_date.strftime('%Y-%m-%d') if job.scheduled_date else 'Not scheduled' }}</strong>
+                </div>
+                {% endif %}
+                {% if job.follow_up_date %}
+                <div class="mb-2">
+                    <small class="text-muted">Previous Follow-up:</small><br>
+                    <strong>{{ job.follow_up_date.strftime('%Y-%m-%d %H:%M') if job.follow_up_date else 'Never' }}</strong>
+                </div>
+                {% endif %}
+                <div class="mb-2">
+                    <small class="text-muted">Days since reported:</small><br>
+                    <strong>{{ (today_date - job.reported_date).days }} days</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Previous Notes</h5>
+            </div>
+            <div class="card-body">
+                {% if job.notes %}
+                <p class="small">{{ job.notes }}</p>
+                {% else %}
+                <p class="small text-muted">No previous notes</p>
+                {% endif %}
+                
+                {% if job.follow_up_notes %}
+                <hr>
+                <h6 class="small">Last Follow-up:</h6>
+                <p class="small">{{ job.follow_up_notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        <p class="text-muted">Overview of your maintenance operations</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_jobs }}</h4>
+                        <p class="mb-0">Total Jobs</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tasks fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ pending_jobs }}</h4>
+                        <p class="mb-0">Pending</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ in_progress_jobs }}</h4>
+                        <p class="mb-0">In Progress</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-spinner fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ completed_jobs }}</h4>
+                        <p class="mb-0">Completed</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ follow_up_needed }}</h4>
+                        <p class="mb-0">Need Follow-up</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-envelope fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if urgent_jobs %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Urgent Jobs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Payment Reference</th>
+                                <th>Title</th>
+                                <th>Reported</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in urgent_jobs %}
+                            <tr>
+                                <td>{{ job.flat.payment_reference }}</td>
+                                <td>{{ job.title }}</td>
+                                <td>{{ job.reported_date.strftime('%d/%m/%Y') }}</td>
+                                <td><span class="badge bg-warning">{{ job.status }}</span></td>
+                                <td>
+                                    <a href="{{ url_for('schedule_job', job_id=job.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-calendar"></i> Schedule
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if jobs_needing_followup %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-envelope"></i> Jobs Needing Follow-up</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Payment Reference</th>
+                                <th>Title</th>
+                                <th>Contractor</th>
+                                <th>Status</th>
+                                <th>Reported</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs_needing_followup %}
+                            <tr>
+                                <td>{{ job.flat.payment_reference }}</td>
+                                <td>{{ job.title }}</td>
+                                <td>
+                                    {% if job.contractor %}
+                                        {{ job.contractor.name }}
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-info">{{ job.status }}</span></td>
+                                <td>{{ job.reported_date.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('followup_job', job_id=job.id) }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-envelope"></i> Send Follow-up
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Jobs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Payment Reference</th>
+                                <th>Title</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Follow-up</th>
+                                <th>Reported</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td>{{ job.flat.payment_reference }}</td>
+                                <td>{{ job.title }}</td>
+                                <td>
+                                    {% if job.priority == 'Urgent' %}
+                                        <span class="badge bg-danger">{{ job.priority }}</span>
+                                    {% elif job.priority == 'High' %}
+                                        <span class="badge bg-warning">{{ job.priority }}</span>
+                                    {% elif job.priority == 'Medium' %}
+                                        <span class="badge bg-info">{{ job.priority }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ job.priority }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if job.status == 'Completed' %}
+                                        <span class="badge bg-success">{{ job.status }}</span>
+                                    {% elif job.status == 'In Progress' %}
+                                        <span class="badge bg-primary">{{ job.status }}</span>
+                                    {% elif job.status == 'Scheduled' %}
+                                        <span class="badge bg-info">{{ job.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ job.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if job.status in ['Pending', 'Scheduled', 'In Progress'] %}
+                                        {% if job.follow_up_count > 0 %}
+                                            <span class="badge bg-success"><i class="fas fa-check"></i> {{ job.follow_up_count }} Follow-up{{ 's' if job.follow_up_count != 1 else '' }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning"><i class="fas fa-envelope"></i> Needed</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ job.reported_date.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('edit_job', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if job.status == 'Pending' %}
+                                        <a href="{{ url_for('schedule_job', job_id=job.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-calendar"></i>
+                                        </a>
+                                    {% elif job.status in ['Scheduled', 'In Progress'] %}
+                                        {% if job.follow_up_count == 0 %}
+                                            <a href="{{ url_for('followup_job', job_id=job.id) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-envelope"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('complete_job', job_id=job.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('jobs') }}" class="btn btn-primary">View All Jobs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

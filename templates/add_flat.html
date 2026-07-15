@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Add Flat - Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-plus"></i> Add New Flat</h1>
+        <p class="text-muted">Add a new flat to the system with complete property details</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="flat_number" class="form-label">Flat Number *</label>
+                                <input type="text" name="flat_number" id="flat_number" class="form-control" required 
+                                       placeholder="e.g., A101, 2B">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="payment_reference" class="form-label">Payment Reference</label>
+                                <input type="text" name="payment_reference" id="payment_reference" class="form-control" 
+                                       placeholder="e.g., REF001">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Property Address *</label>
+                        <input type="text" name="address" id="address" class="form-control" required 
+                               placeholder="123 Main Street, City, State">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="postcode" class="form-label">Postcode</label>
+                                <input type="text" name="postcode" id="postcode" class="form-control" 
+                                       placeholder="e.g., SW1A 1AA">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="landlord" class="form-label">Landlord</label>
+                                <input type="text" name="landlord" id="landlord" class="form-control" 
+                                       placeholder="Landlord name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tenant_name" class="form-label">Tenant Name</label>
+                                <input type="text" name="tenant_name" id="tenant_name" class="form-control" 
+                                       placeholder="John Doe">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rent_amount" class="form-label">Monthly Rent</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">£</span>
+                                    <input type="number" name="rent_amount" id="rent_amount" class="form-control" 
+                                           step="0.01" min="0" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rent_due_date" class="form-label">Rent Due Date (Day of Month)</label>
+                                <select name="rent_due_date" id="rent_due_date" class="form-select">
+                                    <option value="">Select day</option>
+                                    {% for day in range(1, 32) %}
+                                    <option value="{{ day }}">{{ day }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tenant_contact_details" class="form-label">Tenant Contact Details</label>
+                                <textarea name="tenant_contact_details" id="tenant_contact_details" class="form-control" rows="3" 
+                                          placeholder="Phone: +44 20 1234 5678&#10;Email: tenant@email.com"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tenancy_start_date" class="form-label">Tenancy Start Date</label>
+                                <input type="date" name="tenancy_start_date" id="tenancy_start_date" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tenancy_end_date" class="form-label">Tenancy End Date</label>
+                                <input type="date" name="tenancy_end_date" id="tenancy_end_date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('flats') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Flat
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Adding complete property information helps with rent tracking and tenant management.</p>
+                <hr>
+                <h6>Benefits of complete data:</h6>
+                <ul class="small">
+                    <li>Track rent payments and due dates</li>
+                    <li>Manage tenant contact information</li>
+                    <li>Monitor tenancy periods</li>
+                    <li>Payment reference tracking</li>
+                    <li>Landlord information management</li>
+                </ul>
+                <hr>
+                <h6>Excel Import:</h6>
+                <p class="small text-muted">You can also import multiple flats at once from an Excel file using the import feature.</p>
+                <a href="{{ url_for('import_flats') }}" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="fas fa-file-excel"></i> Import from Excel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
