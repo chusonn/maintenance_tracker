@@ -35,6 +35,7 @@
                 </div>
 
                 <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="contractor_id" class="form-label">Assign Contractor *</label>
                         <select name="contractor_id" id="contractor_id" class="form-select" required>

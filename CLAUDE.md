@@ -7,10 +7,12 @@ Flask web app for UK property-maintenance management: flats (properties + tenanc
 ```powershell
 venv\Scripts\python.exe run.py      # run dev server → http://127.0.0.1:5000
 venv\Scripts\pip.exe install -r requirements.txt
-$env:FLASK_APP = "run.py"; venv\Scripts\flask.exe backup|list-backups|restore N
+$env:FLASK_APP = "run.py"; venv\Scripts\flask.exe backup|list-backups|restore N|seed
+venv\Scripts\python.exe -m pytest     # test suite (in-memory SQLite, fast)
+venv\Scripts\python.exe -m ruff check .
 ```
 
-There is no test suite yet (planned; see Roadmap). Always use the project venv — the system Python does not have the dependencies.
+Always use the project venv — the system Python does not have the dependencies. `flask seed` fills the DB with deterministic UK demo data (add `--wipe` to replace everything — prompts first).
 
 ## Architecture
 
@@ -28,16 +30,16 @@ App-factory + blueprints (Flask 3.1, SQLAlchemy 2.0 style — `Mapped` models, `
 
 ### Roadmap (agreed with Ralph, July 2026)
 
-Portfolio upgrade in phases: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ (3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI, (4) full UI redesign — clean SaaS design system (token-based CSS, sidebar shell), (5) analytics page with Chart.js, (6) README + screenshots. Update this file as phases land.
-
-Known bugs deliberately deferred to phase 3 (fix test-first): flats list shows soft-deleted flats; `delete_flat` hard-deletes (never reaches bin) and errors if the flat has any jobs; contractors have no edit/delete; export includes deleted jobs; `complete_job` ignores the posted completion date; no CSRF yet.
+Portfolio upgrade in phases: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ (4) full UI redesign — clean SaaS design system (token-based CSS, sidebar shell), (5) analytics page with Chart.js, (6) README + screenshots. Update this file as phases land.
 
 ## Domain conventions
 
 - **Currency is GBP (£)** everywhere. **Dates display as UK `dd/mm/yyyy`**; HTML date inputs use ISO as required by the spec.
 - `Flat.payment_reference` is the unique business identifier (not `flat_number` — several flats share numbers across buildings). Excel import upserts by payment reference.
 - Job lifecycle: `Pending → Scheduled → In Progress → Completed` (or `Cancelled`). Priorities: `Low / Medium / High / Urgent`.
-- **Soft delete**: all three models carry `is_deleted / deleted_at / deleted_by`. Deleting moves rows to the recycle bin; "permanent delete" from the bin is the only hard delete. Every list/count/export query must filter `is_deleted == False` — missing filters have been a recurring bug class here.
+- **Soft delete**: all three models carry `is_deleted / deleted_at / deleted_by` via `SoftDeleteMixin`. Deleting moves rows to the recycle bin; "permanent delete" from the bin is the only hard delete. Always query through `Model.active_select()` — raw `select(Model)` without the filter has been a recurring bug class here.
+- **Flat delete cascade**: soft-deleting a flat cascades to its live jobs (tagged `deleted_by='cascade:flat'`); restoring the flat restores exactly those jobs and not independently-binned ones. Purging a flat hard-deletes its jobs first (`flat_id` is NOT NULL). Deleting is blocked while the flat has active jobs.
+- Contractor `is_active` is retired: the column still exists in old SQLite files but is unmapped; `is_deleted` is the single hidden-flag. A startup migration folds `is_active=0` rows into the recycle bin.
 - Follow-ups: `follow_up_count` increments per follow-up sent; dashboards flag active jobs with zero follow-ups.
 
 ## Gotchas

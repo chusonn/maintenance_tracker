@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 
 from .config import Config
-from .extensions import db
+from .extensions import csrf, db
 
 
 def create_app(config: type[Config] = Config) -> Flask:
@@ -9,6 +9,7 @@ def create_app(config: type[Config] = Config) -> Flask:
     app.config.from_object(config)
 
     db.init_app(app)
+    csrf.init_app(app)
 
     from .blueprints import contractors, dashboard, flats, jobs, recycle
 
@@ -18,9 +19,10 @@ def create_app(config: type[Config] = Config) -> Flask:
     app.register_blueprint(contractors.bp)
     app.register_blueprint(recycle.bp)
 
-    from . import cli
+    from . import cli, seed
 
     cli.register(app)
+    seed.register(app)
 
     _register_template_filters(app)
     _register_error_handlers(app)

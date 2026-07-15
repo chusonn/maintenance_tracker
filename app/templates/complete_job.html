@@ -38,6 +38,7 @@
                 </div>
 
                 <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -52,9 +53,9 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="completion_date" class="form-label">Completion Date</label>
-                                <input type="date" name="completion_date" id="completion_date" class="form-control" 
-                                       value="{{ today_date }}" readonly>
+                                <label for="completed_date" class="form-label">Completion Date</label>
+                                <input type="date" name="completed_date" id="completed_date" class="form-control"
+                                       value="{{ today_date }}">
                                 <div class="form-text">Job will be marked as completed on this date</div>
                             </div>
                         </div>

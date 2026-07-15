@@ -15,6 +15,7 @@
         <div class="card">
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="file" class="form-label">Select Excel File</label>
                         <input type="file" name="file" id="file" class="form-control" accept=".xlsx,.xls" required>

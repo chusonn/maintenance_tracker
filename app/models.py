@@ -72,7 +72,8 @@ class Contractor(SoftDeleteMixin, db.Model):
     email: Mapped[str | None] = mapped_column(String(120))
     phone: Mapped[str | None] = mapped_column(String(20))
     specialty: Mapped[str | None] = mapped_column(String(100))
-    is_active: Mapped[bool] = mapped_column(default=True)
+    # NB: a legacy is_active column still exists in old SQLite files; it was
+    # superseded by is_deleted and is no longer mapped (see db_migrate.py).
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     maintenance_jobs: Mapped[list[MaintenanceJob]] = relationship(back_populates="contractor")

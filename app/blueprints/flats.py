@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from sqlalchemy import select
 
 from ..extensions import db
 from ..models import ACTIVE_JOB_STATUSES, Flat
@@ -17,7 +16,8 @@ def _apply_form(flat: Flat) -> None:
     flat.tenant_name = request.form["tenant_name"]
     flat.tenant_contact_details = request.form["tenant_contact_details"]
     flat.rent_amount = float(request.form["rent_amount"]) if request.form["rent_amount"] else None
-    flat.rent_due_date = int(request.form["rent_due_date"]) if request.form["rent_due_date"] else None
+    raw_due = request.form["rent_due_date"]
+    flat.rent_due_date = int(raw_due) if raw_due else None
     flat.tenancy_start_date = _form_date("tenancy_start_date")
     flat.tenancy_end_date = _form_date("tenancy_end_date")
     flat.landlord = request.form["landlord"]
@@ -31,7 +31,7 @@ def _form_date(field: str):
 
 @bp.route("")
 def index():
-    flats = db.session.scalars(select(Flat).order_by(Flat.flat_number)).all()
+    flats = db.session.scalars(Flat.active_select().order_by(Flat.flat_number)).all()
     return render_template("flats.html", flats=flats)
 
 
@@ -58,11 +58,25 @@ def edit(flat_id: int):
     return render_template("edit_flat.html", flat=flat)
 
 
+def _soft_delete_with_jobs(flat: Flat) -> None:
+    """Bin the flat and cascade to its live jobs. Cascaded jobs are tagged
+    so restoring the flat resurrects exactly them — not jobs the user had
+    binned independently beforehand."""
+    for job in flat.maintenance_jobs:
+        if not job.is_deleted:
+            job.soft_delete(by="cascade:flat")
+    flat.soft_delete()
+
+
 @bp.route("/<int:flat_id>/delete", methods=["POST"])
 def delete(flat_id: int):
     flat = db.get_or_404(Flat, flat_id)
 
-    active_jobs = [job for job in flat.maintenance_jobs if job.status in ACTIVE_JOB_STATUSES]
+    active_jobs = [
+        job
+        for job in flat.maintenance_jobs
+        if job.status in ACTIVE_JOB_STATUSES and not job.is_deleted
+    ]
     if active_jobs:
         flash(
             f"Cannot delete flat {flat.flat_number} - it has {len(active_jobs)} active "
@@ -71,13 +85,12 @@ def delete(flat_id: int):
         )
         return redirect(url_for("flats.index"))
 
-    try:
-        db.session.delete(flat)
-        db.session.commit()
-        flash(f"Flat {flat.flat_number} ({flat.payment_reference}) deleted successfully!", "success")
-    except Exception as exc:
-        db.session.rollback()
-        flash(f"Error deleting flat: {exc}", "danger")
+    _soft_delete_with_jobs(flat)
+    db.session.commit()
+    flash(
+        f"Flat {flat.flat_number} ({flat.payment_reference}) moved to the recycle bin.",
+        "success",
+    )
     return redirect(url_for("flats.index"))
 
 
@@ -87,10 +100,15 @@ def delete_all():
         flash("Deletion cancelled - confirmation phrase was incorrect.", "warning")
         return redirect(url_for("flats.index"))
 
-    flat_count = db.session.scalar(select(db.func.count()).select_from(Flat))
-    db.session.execute(db.delete(Flat))
+    flats = db.session.scalars(Flat.active_select()).all()
+    for flat in flats:
+        _soft_delete_with_jobs(flat)
     db.session.commit()
-    flash(f"Successfully deleted {flat_count} flats and all related maintenance jobs!", "success")
+    flash(
+        f"Moved {len(flats)} flats (and their jobs) to the recycle bin. "
+        "They can be restored from there.",
+        "success",
+    )
     return redirect(url_for("flats.index"))
 
 

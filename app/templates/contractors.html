@@ -47,6 +47,17 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="viewContractorDetails('{{ contractor.id }}')">
                                         <i class="fas fa-eye"></i> View
                                     </button>
+                                    <a href="{{ url_for('contractors.edit', contractor_id=contractor.id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <form method="POST" action="{{ url_for('contractors.delete', contractor_id=contractor.id) }}"
+                                          style="display: inline;"
+                                          onsubmit="return confirm('Move {{ contractor.name }} to the recycle bin? Their history on past jobs is kept.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}

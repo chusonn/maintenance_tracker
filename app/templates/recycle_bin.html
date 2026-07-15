@@ -161,11 +161,13 @@
                         <div class="col-md-4 text-end">
                             <div class="action-buttons d-flex gap-2 justify-content-end">
                                 <form method="POST" action="{{ url_for('recycle.restore', kind='job', item_id=job.id) }}" style="display: inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn restore-btn btn-sm">
                                         <i class="fas fa-undo"></i> Restore
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ url_for('recycle.purge', kind='job', item_id=job.id) }}" style="display: inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn permanent-delete-btn btn-sm" 
                                             onclick="return confirm('Are you sure? This will permanently delete this job and cannot be undone.')">
                                         <i class="fas fa-trash"></i> Delete Forever
@@ -208,11 +210,13 @@
                         <div class="col-md-4 text-end">
                             <div class="action-buttons d-flex gap-2 justify-content-end">
                                 <form method="POST" action="{{ url_for('recycle.restore', kind='flat', item_id=flat.id) }}" style="display: inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn restore-btn btn-sm">
                                         <i class="fas fa-undo"></i> Restore
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ url_for('recycle.purge', kind='flat', item_id=flat.id) }}" style="display: inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn permanent-delete-btn btn-sm"
                                             onclick="return confirm('Are you sure? This will permanently delete this flat and cannot be undone.')">
                                         <i class="fas fa-trash"></i> Delete Forever
@@ -256,11 +260,13 @@
                         <div class="col-md-4 text-end">
                             <div class="action-buttons d-flex gap-2 justify-content-end">
                                 <form method="POST" action="{{ url_for('recycle.restore', kind='contractor', item_id=contractor.id) }}" style="display: inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn restore-btn btn-sm">
                                         <i class="fas fa-undo"></i> Restore
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ url_for('recycle.purge', kind='contractor', item_id=contractor.id) }}" style="display: inline;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn permanent-delete-btn btn-sm"
                                             onclick="return confirm('Are you sure? This will permanently delete this contractor and cannot be undone.')">
                                         <i class="fas fa-trash"></i> Delete Forever

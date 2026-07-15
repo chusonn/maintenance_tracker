@@ -15,6 +15,10 @@ from io import BytesIO
 from ..extensions import db
 from ..models import Flat, MaintenanceJob
 
+
+def _iso(value) -> str:
+    return value.strftime("%Y-%m-%d") if value else ""
+
 IMPORT_SHEET_COLUMNS = {
     "payment_reference": "Payment Reference",
     "flat_number": "Flat No.",
@@ -159,14 +163,14 @@ def build_jobs_export(jobs: list[MaintenanceJob]) -> BytesIO:
                 "Status": job.status,
                 "Contractor": job.contractor.name if job.contractor else "Not Assigned",
                 "Contractor Email": job.contractor.email if job.contractor else "",
-                "Reported Date": job.reported_date.strftime("%Y-%m-%d"),
-                "Scheduled Date": job.scheduled_date.strftime("%Y-%m-%d") if job.scheduled_date else "",
-                "Completed Date": job.completed_date.strftime("%Y-%m-%d") if job.completed_date else "",
+                "Reported Date": _iso(job.reported_date),
+                "Scheduled Date": _iso(job.scheduled_date),
+                "Completed Date": _iso(job.completed_date),
                 "Estimated Cost": job.estimated_cost,
                 "Actual Cost": job.actual_cost,
                 "Notes": job.notes or "",
                 "Follow-up Count": job.follow_up_count or 0,
-                "Follow-up Date": job.follow_up_date.strftime("%Y-%m-%d") if job.follow_up_date else "",
+                "Follow-up Date": _iso(job.follow_up_date),
                 "Follow-up Notes": job.follow_up_notes or "",
             }
         )

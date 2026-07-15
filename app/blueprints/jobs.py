@@ -121,7 +121,7 @@ def add():
         flash("Job added successfully!", "success")
         return redirect(url_for("jobs.index"))
 
-    flats = db.session.scalars(select(Flat).order_by(Flat.payment_reference)).all()
+    flats = db.session.scalars(Flat.active_select().order_by(Flat.payment_reference)).all()
     return render_template("add_job.html", flats=flats)
 
 
@@ -144,7 +144,7 @@ def edit(job_id: int):
         flash("Job updated successfully!", "success")
         return redirect(url_for("jobs.index"))
 
-    flats = db.session.scalars(select(Flat).order_by(Flat.payment_reference)).all()
+    flats = db.session.scalars(Flat.active_select().order_by(Flat.payment_reference)).all()
     return render_template("edit_job.html", job=job, flats=flats)
 
 
@@ -162,9 +162,7 @@ def schedule(job_id: int):
         return redirect(url_for("jobs.index"))
 
     contractors = db.session.scalars(
-        Contractor.active_select()
-        .where(Contractor.is_active == True)  # noqa: E712
-        .order_by(Contractor.name)
+        Contractor.active_select().order_by(Contractor.name)
     ).all()
     return render_template("schedule_job.html", job=job, contractors=contractors)
 
@@ -179,7 +177,7 @@ def complete(job_id: int):
             flash("Actual cost must be a valid number. It has been left empty.", "warning")
 
         job.status = "Completed"
-        job.completed_date = date.today()
+        job.completed_date = _parse_date(request.form.get("completed_date")) or date.today()
         job.actual_cost = actual_cost
         job.notes = request.form["notes"]
         db.session.commit()
@@ -218,7 +216,9 @@ def delete(job_id: int):
 @bp.route("/export")
 def export():
     jobs = db.session.scalars(
-        select(MaintenanceJob).order_by(MaintenanceJob.status, MaintenanceJob.reported_date.desc())
+        MaintenanceJob.active_select().order_by(
+            MaintenanceJob.status, MaintenanceJob.reported_date.desc()
+        )
     ).all()
 
     output = excel_io.build_jobs_export(jobs)

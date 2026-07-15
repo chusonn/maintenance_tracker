@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Contractor - Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-edit"></i> Edit Contractor</h1>
+        <p class="text-muted">Update {{ contractor.name }}'s details</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Contractor Name *</label>
+                                <input type="text" name="name" id="name" class="form-control" required
+                                       value="{{ contractor.name }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="company" class="form-label">Company</label>
+                                <input type="text" name="company" id="company" class="form-control"
+                                       value="{{ contractor.company or '' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="specialty" class="form-label">Specialty *</label>
+                        <select name="specialty" id="specialty" class="form-select" required>
+                            {% for s in ['Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Painting',
+                                         'Appliance Repair', 'General Maintenance', 'Roofing',
+                                         'Pest Control', 'Landscaping', 'Other'] %}
+                            <option value="{{ s }}" {{ 'selected' if contractor.specialty == s }}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" name="email" id="email" class="form-control"
+                                       value="{{ contractor.email or '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="text" name="phone" id="phone" class="form-control"
+                                       value="{{ contractor.phone or '' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('contractors.index') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

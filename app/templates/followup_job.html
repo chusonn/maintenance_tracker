@@ -49,6 +49,7 @@
                 </div>
 
                 <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="follow_up_notes" class="form-label">Follow-up Notes *</label>
                         <textarea name="follow_up_notes" id="follow_up_notes" class="form-control" rows="6" required

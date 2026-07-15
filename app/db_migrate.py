@@ -33,6 +33,21 @@ def ensure_schema() -> None:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN deleted_by VARCHAR(100)"))
                 log.info("Added soft-delete columns to %s", table)
 
+        # Contractor.is_active was superseded by is_deleted; fold the old
+        # flag in so hidden contractors land in the recycle bin. The column
+        # itself stays in SQLite (dropping is not worth the table rebuild).
+        contractor_cols = _columns(conn, "contractor")
+        if "is_active" in contractor_cols and "is_deleted" in contractor_cols:
+            result = conn.execute(
+                text(
+                    "UPDATE contractor SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, "
+                    "deleted_by = 'migration:is_active' "
+                    "WHERE is_active = 0 AND is_deleted = 0"
+                )
+            )
+            if result.rowcount:
+                log.info("Migrated %d inactive contractors to recycle bin", result.rowcount)
+
         job_cols = _columns(conn, "maintenance_job")
         if job_cols and "follow_up_count" not in job_cols:
             conn.execute(

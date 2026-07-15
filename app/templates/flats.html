@@ -159,6 +159,7 @@
                 </button>
                 {% if not active_jobs %}
                 <form method="POST" action="{{ url_for('flats.delete', flat_id=flat.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Delete Flat
                     </button>
@@ -211,6 +212,7 @@
                     <i class="fas fa-times"></i> Cancel
                 </button>
                 <form method="POST" action="{{ url_for('flats.delete_all') }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="confirm" id="confirmInput" value="">
                     <button type="submit" class="btn btn-danger" id="deleteAllBtn" disabled>
                         <i class="fas fa-trash-alt"></i> Delete All Flats

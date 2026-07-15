@@ -27,6 +27,12 @@ def index():
 def restore(kind: str, item_id: int):
     item = db.get_or_404(_MODELS[kind], item_id)
     item.restore()
+    if kind == "flat":
+        # bring back only the jobs that were binned by the flat's cascade,
+        # not ones the user deleted independently beforehand
+        for job in item.maintenance_jobs:
+            if job.is_deleted and job.deleted_by == "cascade:flat":
+                job.restore()
     db.session.commit()
     flash(f"{kind.capitalize()} restored successfully!", "success")
     return redirect(url_for("recycle.index"))
@@ -35,6 +41,10 @@ def restore(kind: str, item_id: int):
 @bp.route("/<any(job, flat, contractor):kind>/<int:item_id>/purge", methods=["POST"])
 def purge(kind: str, item_id: int):
     item = db.get_or_404(_MODELS[kind], item_id)
+    if kind == "flat":
+        # jobs reference the flat with a NOT NULL FK; they go with it
+        for job in list(item.maintenance_jobs):
+            db.session.delete(job)
     db.session.delete(item)
     db.session.commit()
     flash(f"{kind.capitalize()} permanently deleted!", "warning")
