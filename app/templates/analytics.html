@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, stat_card, empty_state %}
+
+{% block title %}Analytics - Maintenance Tracker{% endblock %}
+
+{% block content %}
+{{ page_header('Analytics', 'Job volume, spend and workload trends') }}
+
+{% if not stats.has_data %}
+{{ empty_state('bar-chart', 'No data to chart yet', 'Add maintenance jobs and the analytics will build themselves.', url_for('jobs.add'), 'New Job') }}
+{% else %}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">{{ stat_card('Jobs reported (12 mo)', stats.reported, 'wrench', 'accent') }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card('Jobs completed (12 mo)', stats.completed, 'check-circle', 'success') }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card('Total spend (12 mo)', stats.total_spend | gbp, 'pound', 'info') }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card('Avg job cost (12 mo)', stats.avg_cost | gbp, 'bar-chart', 'neutral') }}</div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-lg-7">
+        <div class="mt-card h-100">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Jobs reported per month</h2>
+                <span class="mt-meta">Last 12 months</span>
+            </div>
+            <div class="mt-card-body">
+                <div class="mt-chart">
+                    <canvas id="chart-volume" role="img" aria-label="Column chart of maintenance jobs reported per month over the last 12 months. The same figures are in the data table below."></canvas>
+                </div>
+                <details class="mt-chart-table">
+                    <summary>View data table</summary>
+                    <table class="mt-table">
+                        <thead><tr><th>Month</th><th>Jobs reported</th></tr></thead>
+                        <tbody>
+                            {% for row in volume %}
+                            <tr><td>{{ row.label }}</td><td>{{ row.count }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="mt-card h-100">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Jobs by status</h2>
+                <span class="mt-meta">All time</span>
+            </div>
+            <div class="mt-card-body">
+                <div class="mt-chart">
+                    <canvas id="chart-status" role="img" aria-label="Bar chart of jobs by status. The same figures are in the data table below."></canvas>
+                </div>
+                <details class="mt-chart-table">
+                    <summary>View data table</summary>
+                    <table class="mt-table">
+                        <thead><tr><th>Status</th><th>Jobs</th></tr></thead>
+                        <tbody>
+                            {% for row in statuses %}
+                            <tr><td>{{ row.status }}</td><td>{{ row.count }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-lg-7">
+        <div class="mt-card h-100">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Maintenance spend</h2>
+                <span class="mt-meta">Completed jobs · last 12 months</span>
+            </div>
+            <div class="mt-card-body">
+                <div class="mt-chart">
+                    <canvas id="chart-costs" role="img" aria-label="Line chart comparing estimated and actual maintenance spend per month on completed jobs. The same figures are in the data table below."></canvas>
+                </div>
+                <details class="mt-chart-table">
+                    <summary>View data table</summary>
+                    <table class="mt-table">
+                        <thead><tr><th>Month</th><th>Estimated</th><th>Actual</th></tr></thead>
+                        <tbody>
+                            {% for row in costs %}
+                            <tr><td>{{ row.label }}</td><td>{{ row.estimated | gbp }}</td><td>{{ row.actual | gbp }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="mt-card h-100">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Jobs by priority</h2>
+                <span class="mt-meta">All time</span>
+            </div>
+            <div class="mt-card-body">
+                <div class="mt-chart">
+                    <canvas id="chart-priority" role="img" aria-label="Bar chart of jobs by priority. The same figures are in the data table below."></canvas>
+                </div>
+                <details class="mt-chart-table">
+                    <summary>View data table</summary>
+                    <table class="mt-table">
+                        <thead><tr><th>Priority</th><th>Jobs</th></tr></thead>
+                        <tbody>
+                            {% for row in priorities %}
+                            <tr><td>{{ row.priority }}</td><td>{{ row.count }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-lg-7">
+        <div class="mt-card h-100">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Top contractors by completed jobs</h2>
+                <span class="mt-meta">All time</span>
+            </div>
+            <div class="mt-card-body">
+                {% if contractors %}
+                <div class="mt-chart">
+                    <canvas id="chart-contractors" role="img" aria-label="Bar chart of contractors ranked by completed jobs. Completed counts and average costs are in the table alongside."></canvas>
+                </div>
+                {% else %}
+                <p class="mt-meta mb-0">No completed jobs are assigned to a contractor yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="mt-card h-100">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Contractor costs</h2>
+                <span class="mt-meta">Average per completed job</span>
+            </div>
+            <div class="mt-card-body {{ 'flush mt-table-wrap' if contractors }}">
+                {% if contractors %}
+                <table class="mt-table">
+                    <thead><tr><th>Contractor</th><th>Completed</th><th>Avg cost</th></tr></thead>
+                    <tbody>
+                        {% for row in contractors %}
+                        <tr>
+                            <td class="primary">{{ row.name }}</td>
+                            <td>{{ row.completed }}</td>
+                            <td>{{ row.avg_cost | gbp }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="mt-meta mb-0">Assign contractors to jobs and complete them to see costs here.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="analytics-data">{{ chart_data | tojson }}</script>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if stats.has_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endif %}
+{% endblock %}

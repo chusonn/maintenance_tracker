@@ -21,8 +21,9 @@ App-factory + blueprints (Flask 3.1, SQLAlchemy 2.0 style — `Mapped` models, `
 - `run.py` — entry point; debug/host/port from `FLASK_DEBUG`/`HOST`/`PORT` env vars.
 - `app/__init__.py` — `create_app()`, blueprint registration, `gbp`/`ukdate` template filters, 404/500 handlers.
 - `app/models.py` — `Flat`, `Contractor`, `MaintenanceJob` + `SoftDeleteMixin` (`active_select()` / `deleted_select()` / `soft_delete()` / `restore()`). Status/priority constants live here.
-- `app/blueprints/` — `dashboard`, `jobs`, `flats`, `contractors`, `recycle` (endpoints are `blueprint.name`, e.g. `jobs.index`; recycle uses `kind` + `item_id` params for all three models).
+- `app/blueprints/` — `dashboard`, `analytics`, `jobs`, `flats`, `contractors`, `recycle` (endpoints are `blueprint.name`, e.g. `jobs.index`; recycle uses `kind` + `item_id` params for all three models).
 - `app/services/excel_io.py` — Excel import/export. Parsing helpers (`clean_rent_value`, `parse_uk_date`, `clean_due_date`) are dependency-free; pandas is lazy-imported only inside `import_flats_from_file` / `build_jobs_export`.
+- `app/services/analytics.py` — pure aggregation functions for the analytics page (monthly volume, cost trend, status/priority breakdowns, top contractors); month keys are `"YYYY-MM"` strings via `func.strftime`. Charts: Chart.js 4 (CDN) in `app/static/js/analytics.js` — colors read the `--mt-*` CSS tokens at runtime (never hard-coded), and charts are built only after `document.fonts.ready` (Chart.js caches label measurements per font string; building before the Inter webfont loads clips the widest axis tick).
 - `app/db_migrate.py` — `ensure_schema()`: idempotent PRAGMA-based column adds + `create_all()`; runs in `create_app()` when `RUN_SCHEMA_SYNC` is true (off in `TestConfig`). Migrations only ever ADD columns and backfill.
 - `app/cli.py` — `flask backup` / `list-backups` / `restore N`; paths derive from `app.instance_path` so they always hit the live DB.
 - `app/templates/` — Jinja2. Design system lives in `app/static/css/app.css` (tokens) + `_components.html`/`_icons.html` (macros); see the `design-system` skill before touching any UI. Bootstrap 5.3 CDN is used for grid + JS behaviors only.
@@ -30,7 +31,7 @@ App-factory + blueprints (Flask 3.1, SQLAlchemy 2.0 style — `Mapped` models, `
 
 ### Roadmap (agreed with Ralph, July 2026)
 
-Portfolio upgrade in phases: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ ~~(4) full UI redesign — clean SaaS design system~~ ✔ (5) analytics page with Chart.js, (6) README + screenshots. Update this file as phases land.
+Portfolio upgrade in phases: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ ~~(4) full UI redesign — clean SaaS design system~~ ✔ ~~(5) analytics page with Chart.js~~ ✔ (6) README + screenshots. Update this file as phases land.
 
 ## Domain conventions
 

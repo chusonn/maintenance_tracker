@@ -666,3 +666,30 @@ a:hover {
 .mt-filter-bar .form-label {
   font-size: var(--mt-text-xs);
 }
+
+/* ============ Analytics charts ============ */
+
+.mt-chart {
+  position: relative;
+  height: 280px;
+}
+
+.mt-chart-table {
+  margin-top: var(--mt-space-3);
+}
+
+.mt-chart-table summary {
+  font-size: var(--mt-text-xs);
+  color: var(--mt-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.mt-chart-table summary:hover {
+  color: var(--mt-text-secondary);
+}
+
+.mt-chart-table .mt-table {
+  margin-top: var(--mt-space-2);
+  width: 100%;
+}

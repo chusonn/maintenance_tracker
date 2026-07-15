@@ -8,7 +8,7 @@ description: Run, start, or launch the Maintenance Tracker dev server locally (W
 From the repo root (`C:\Users\ralph\CascadeProjects\maintenance_tracker`):
 
 ```powershell
-venv\Scripts\python.exe app.py
+venv\Scripts\python.exe run.py
 ```
 
 - App serves at **http://127.0.0.1:5000** (`/` redirects to `/dashboard`).
