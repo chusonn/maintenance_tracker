@@ -1,178 +1,87 @@
-# Maintenance Tracker System
+# Maintenance Tracker
 
-A comprehensive web-based maintenance tracking system designed for property management companies and maintenance virtual assistants. This system helps streamline the process of scheduling contractors, tracking maintenance jobs, and managing property information.
+[![CI](https://github.com/chusonn/maintenance_tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/chusonn/maintenance_tracker/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.12%20%7C%203.14-blue)
+![Flask](https://img.shields.io/badge/flask-3.1-black)
+
+A Flask web app for managing UK rental-property maintenance: flats and tenancies, contractors, and maintenance jobs with scheduling, follow-up tracking, cost comparison, Excel import/export, an analytics dashboard, and a soft-delete recycle bin. Single-user, runs locally, SQLite storage — built for a property manager handling a real portfolio of 200+ flats.
+
+![Dashboard](docs/screenshots/dashboard.png)
 
 ## Features
 
-### 🏠 **Property Management**
-- Add and manage multiple flats/properties
-- Store tenant contact information
-- Track active maintenance jobs per property
+- **Job lifecycle** — `Pending → Scheduled → In Progress → Completed` (or `Cancelled`), with four priority levels, contractor assignment, estimated-vs-actual cost tracking, and per-job follow-up counts so nothing slips.
+- **Analytics** — monthly job volume, estimated-vs-actual spend on completed jobs, status/priority breakdowns, and top contractors by completed work. Chart.js reading the app's design tokens; every chart has a data-table twin for accessibility.
+- **Flats & tenancies** — properties keyed by a unique payment reference, with tenant details, rent, due dates, and open-job counts at a glance.
+- **Excel round-trip** — bulk-import flats from spreadsheets (upserts by payment reference, tolerant of messy real-world data) and export the jobs register to `.xlsx`.
+- **Soft-delete recycle bin** — deleting any flat, contractor, or job moves it to a bin; restore or permanently purge from there. Deleting a flat cascades to its jobs and restores them together.
+- **Safety rails** — CSRF protection on every form, confirmation on every destructive action, `flask backup` / `restore` CLI for the database, idempotent startup schema migrations.
+- **UK conventions** — currency in GBP, dates displayed as `dd/mm/yyyy` throughout.
 
-### 👷 **Contractor Management**
-- Maintain a database of contractors with specialties
-- Track contractor availability and active jobs
-- Store contact information and company details
+| Jobs | Analytics |
+| --- | --- |
+| ![Jobs list with filters](docs/screenshots/jobs.png) | ![Analytics page](docs/screenshots/analytics.png) |
 
-### 📋 **Job Tracking**
-- Create maintenance requests with priority levels
-- Schedule jobs with assigned contractors
-- Track job status from pending to completion
-- Record estimated vs actual costs
-- Add detailed notes and descriptions
+<details>
+<summary>More screenshots</summary>
 
-### 📊 **Dashboard Overview**
-- Real-time statistics on job status
-- Urgent job alerts
-- Recent activity feed
-- Quick access to common actions
+![Flats list](docs/screenshots/flats.png)
 
-### 🎯 **Priority Management**
-- Four priority levels: Low, Medium, High, Urgent
-- Color-coded visual indicators
-- Priority-based filtering and sorting
+</details>
 
-## Installation
+## Quickstart
 
-### Prerequisites
-- Python 3.7 or higher
-- pip package manager
+Requires Python 3.12+.
 
-### Setup Instructions
-
-1. **Clone or download the project** to your local directory
-
-2. **Navigate to the project directory:**
-   ```bash
-   cd maintenance_tracker
-   ```
-
-3. **Create a virtual environment (recommended):**
-   ```bash
-   python -m venv venv
-   
-   # On Windows:
-   venv\Scripts\activate
-   
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
-
-4. **Install the required dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Run the application:**
-   ```bash
-   python app.py
-   ```
-
-6. **Open your web browser** and navigate to:
-   ```
-   http://localhost:5000
-   ```
-
-## Getting Started
-
-### 1. Add Your Properties
-- Navigate to the "Flats" section
-- Click "Add New Flat"
-- Enter property details and tenant information
-
-### 2. Add Contractors
-- Go to the "Contractors" section
-- Click "Add New Contractor"
-- Enter contractor details and specialties
-
-### 3. Create Your First Job
-- Navigate to "Jobs" and click "Add New Job"
-- Select the property, describe the issue, and set priority
-- Schedule the job with an appropriate contractor
-
-### 4. Track Progress
-- Use the dashboard to monitor job status
-- Update job details as work progresses
-- Mark jobs as completed when finished
-
-## System Structure
-
-### Database Tables
-- **Flats**: Property information and tenant details
-- **Contractors**: Contractor information and specialties
-- **Maintenance Jobs**: Job details, scheduling, and status tracking
-
-### Key Features
-- **Responsive Design**: Works on desktop and mobile devices
-- **Real-time Updates**: Instant status changes and notifications
-- **Cost Tracking**: Monitor estimated vs actual costs
-- **Filtering & Sorting**: Find jobs quickly with advanced filters
-- **Priority Management**: Visual indicators for urgent tasks
-
-## Usage Tips
-
-### For Maintenance Virtual Assistants
-1. **Start with urgent jobs** - Check the dashboard daily for urgent items
-2. **Keep contractor info updated** - Regular contact information checks
-3. **Use detailed descriptions** - Help contractors understand the work needed
-4. **Track costs carefully** - Compare estimates with actual costs
-5. **Follow up promptly** - Use the notes system to track communications
-
-### Best Practices
-- Set appropriate priority levels for accurate triage
-- Schedule jobs based on contractor specialties
-- Keep tenant contact information current
-- Document completion details for future reference
-- Review cost comparisons for budget planning
-
-## Technical Details
-
-### Technologies Used
-- **Backend**: Flask (Python web framework)
-- **Database**: SQLite (included)
-- **Frontend**: Bootstrap 5, HTML5, JavaScript
-- **Icons**: Font Awesome
-
-### File Structure
-```
-maintenance_tracker/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── maintenance_tracker.db # SQLite database (created automatically)
-├── templates/            # HTML templates
-│   ├── base.html         # Base template with navigation
-│   ├── dashboard.html   # Main dashboard view
-│   ├── jobs.html         # Job listing and management
-│   ├── add_job.html      # Create new job form
-│   ├── edit_job.html     # Edit existing job
-│   ├── schedule_job.html # Schedule job with contractor
-│   ├── complete_job.html # Mark job as completed
-│   ├── flats.html        # Property listing
-│   ├── add_flat.html     # Add new property
-│   ├── contractors.html  # Contractor listing
-│   └── add_contractor.html # Add new contractor
-└── README.md            # This file
+```bash
+python -m venv venv && venv/bin/pip install -r requirements.txt   # Windows: venv\Scripts\pip
+venv/bin/flask --app run.py seed                                  # optional: deterministic demo data
+venv/bin/python run.py                                            # → http://127.0.0.1:5000
 ```
 
-## Support
+The SQLite database is created automatically in `instance/` on first run. Configuration is via environment variables (or a `.env` file): `SECRET_KEY`, `DATABASE_URL`, `FLASK_DEBUG`, `HOST`, `PORT`.
 
-This system is designed to be intuitive and user-friendly. If you encounter any issues:
+## Development
 
-1. **Database Issues**: Delete `maintenance_tracker.db` and restart the application
-2. **Port Conflicts**: The application uses port 5000 by default
-3. **Performance**: The system is optimized for managing up to 1000+ properties
+```bash
+venv/bin/pip install -r requirements-dev.txt
+venv/bin/python -m pytest        # test suite (in-memory SQLite, fast)
+venv/bin/ruff check .            # lint
+```
 
-## Future Enhancements
+CI runs lint + tests on Python 3.12 and 3.14 on every push and pull request.
 
-Potential features for future versions:
-- Email notifications for tenants and contractors
-- Automated follow-up reminders
-- Advanced reporting and analytics
-- Mobile app companion
-- Integration with calendar systems
-- Photo attachments for job documentation
-- Contractor rating system
+## Architecture
 
----
+App factory + blueprints, SQLAlchemy 2.0 style (`Mapped` models, `select()` queries):
 
-**Maintenance Tracker** - Streamlining property maintenance management for virtual assistants and property managers.
+```
+run.py                     # entry point
+app/
+├── __init__.py            # create_app(): blueprints, template filters, error handlers
+├── models.py              # Flat, Contractor, MaintenanceJob + SoftDeleteMixin
+├── config.py              # Config / TestConfig
+├── db_migrate.py          # idempotent startup schema sync (additive only)
+├── cli.py                 # flask backup / list-backups / restore
+├── seed.py                # flask seed — deterministic UK demo data
+├── blueprints/            # dashboard, analytics, jobs, flats, contractors, recycle
+├── services/
+│   ├── excel_io.py        # Excel import/export (pandas lazy-imported)
+│   └── analytics.py       # pure aggregation functions for the analytics page
+├── templates/             # Jinja2; _components.html + _icons.html macro library
+└── static/
+    ├── css/app.css        # design tokens (--mt-*) + component classes
+    └── js/                # app.js, analytics.js (Chart.js, token-driven colors)
+tests/                     # pytest suite: models, routes, Excel IO, analytics, seed
+```
+
+Design decisions worth noting:
+
+- **Soft delete everywhere.** All three models share a `SoftDeleteMixin`; list/count/export queries go through `Model.active_select()` so binned rows never leak into views, exports, or charts.
+- **Business identity over surrogate display.** Several flats share a flat number across buildings, so the unique `payment_reference` is the identifier users see and Excel import upserts by.
+- **Token-based design system.** All styling flows from CSS custom properties in `app.css`; the charts read the same tokens at runtime, so status colors in a chart always match the status badges.
+- **Boring, reliable migrations.** Startup schema sync only ever adds columns and backfills — no destructive migrations against a live personal database.
+
+## License
+
+Personal portfolio project — no license granted for reuse yet.
