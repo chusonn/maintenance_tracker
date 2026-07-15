@@ -11,10 +11,10 @@
                 <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
                     <i class="fas fa-trash-alt"></i> Delete All Flats
                 </button>
-                <a href="{{ url_for('import_flats') }}" class="btn btn-success me-2">
+                <a href="{{ url_for('flats.import_flats') }}" class="btn btn-success me-2">
                     <i class="fas fa-file-excel"></i> Import Excel
                 </a>
-                <a href="{{ url_for('add_flat') }}" class="btn btn-primary">
+                <a href="{{ url_for('flats.add') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add New Flat
                 </a>
             </div>
@@ -83,10 +83,10 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ url_for('add_job') }}?flat_id={{ flat.id }}" class="btn btn-sm btn-outline-primary" title="Add Job">
+                                        <a href="{{ url_for('jobs.add') }}?flat_id={{ flat.id }}" class="btn btn-sm btn-outline-primary" title="Add Job">
                                             <i class="fas fa-plus"></i>
                                         </a>
-                                        <a href="{{ url_for('edit_flat', flat_id=flat.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit Flat">
+                                        <a href="{{ url_for('flats.edit', flat_id=flat.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit Flat">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -106,10 +106,10 @@
                     <i class="fas fa-home fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No flats have been added yet.</p>
                     <div class="d-flex justify-content-center gap-2">
-                        <a href="{{ url_for('import_flats') }}" class="btn btn-success">
+                        <a href="{{ url_for('flats.import_flats') }}" class="btn btn-success">
                             <i class="fas fa-file-excel"></i> Import from Excel
                         </a>
-                        <a href="{{ url_for('add_flat') }}" class="btn btn-primary">Add Your First Flat</a>
+                        <a href="{{ url_for('flats.add') }}" class="btn btn-primary">Add Your First Flat</a>
                     </div>
                 </div>
                 {% endif %}
@@ -158,7 +158,7 @@
                     <i class="fas fa-times"></i> Cancel
                 </button>
                 {% if not active_jobs %}
-                <form method="POST" action="{{ url_for('delete_flat', flat_id=flat.id) }}" class="d-inline">
+                <form method="POST" action="{{ url_for('flats.delete', flat_id=flat.id) }}" class="d-inline">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Delete Flat
                     </button>
@@ -210,7 +210,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <form method="POST" action="{{ url_for('delete_all_flats') }}" class="d-inline">
+                <form method="POST" action="{{ url_for('flats.delete_all') }}" class="d-inline">
                     <input type="hidden" name="confirm" id="confirmInput" value="">
                     <button type="submit" class="btn btn-danger" id="deleteAllBtn" disabled>
                         <i class="fas fa-trash-alt"></i> Delete All Flats

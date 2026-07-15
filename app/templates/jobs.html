@@ -163,11 +163,11 @@
                 <p class="text-muted mb-0">Manage and track all maintenance requests</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ url_for('export_jobs') }}" class="btn btn-success">
+                <a href="{{ url_for('jobs.export') }}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Export
                     <span class="badge bg-light text-dark ms-1">{{ jobs.total }}</span>
                 </a>
-                <a href="{{ url_for('add_job') }}" class="btn btn-primary">
+                <a href="{{ url_for('jobs.add') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> New Job
                 </a>
             </div>
@@ -278,7 +278,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-filter"></i> Filter
                             </button>
-                            <a href="{{ url_for('jobs') }}" class="btn btn-outline-secondary">
+                            <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times"></i> Clear
                             </a>
                         </div>
@@ -359,21 +359,21 @@
                     
                     <!-- Action Buttons -->
                     <div class="job-actions">
-                        <a href="{{ url_for('edit_job', job_id=job.id) }}" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ url_for('jobs.edit', job_id=job.id) }}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-edit"></i> Edit
                         </a>
                         
                         {% if job.status == 'Pending' %}
-                            <a href="{{ url_for('schedule_job', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
+                            <a href="{{ url_for('jobs.schedule', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-calendar"></i> Schedule
                             </a>
                         {% elif job.status in ['Scheduled', 'In Progress'] %}
                             {% if job.follow_up_count == 0 %}
-                                <a href="{{ url_for('followup_job', job_id=job.id) }}" class="btn btn-outline-warning btn-sm">
+                                <a href="{{ url_for('jobs.followup', job_id=job.id) }}" class="btn btn-outline-warning btn-sm">
                                     <i class="fas fa-envelope"></i> Follow-up
                                 </a>
                             {% endif %}
-                            <a href="{{ url_for('complete_job', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
+                            <a href="{{ url_for('jobs.complete', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-check"></i> Complete
                             </a>
                         {% endif %}
@@ -381,7 +381,7 @@
                         <!-- Delete Button -->
                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                 data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                data-job-id="{{ job.id }}" data-job-title="{{ job.title }}">
+                                data-delete-url="{{ url_for('jobs.delete', job_id=job.id) }}" data-job-title="{{ job.title }}">
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     </div>
@@ -395,7 +395,7 @@
                 <i class="fas fa-tasks fa-4x text-muted mb-3"></i>
                 <h4 class="text-muted">No jobs found</h4>
                 <p class="text-muted">Try adjusting your filters or create your first job.</p>
-                <a href="{{ url_for('add_job') }}" class="btn btn-primary">
+                <a href="{{ url_for('jobs.add') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add Your First Job
                 </a>
             </div>
@@ -411,7 +411,7 @@
             <ul class="pagination justify-content-center">
                 {% if jobs.has_prev %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('jobs', page=jobs.prev_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
+                        <a class="page-link" href="{{ url_for('jobs.index', page=jobs.prev_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
                             <i class="fas fa-chevron-left"></i> Previous
                         </a>
                     </li>
@@ -421,7 +421,7 @@
                     {% if page_num %}
                         {% if page_num != jobs.page %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('jobs', page=page_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
+                                <a class="page-link" href="{{ url_for('jobs.index', page=page_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
                                     {{ page_num }}
                                 </a>
                             </li>
@@ -439,7 +439,7 @@
                 
                 {% if jobs.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('jobs', page=jobs.next_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
+                        <a class="page-link" href="{{ url_for('jobs.index', page=jobs.next_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
                             Next <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -497,11 +497,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     deleteModal.addEventListener('show.bs.modal', function(event) {
         const button = event.relatedTarget;
-        const jobId = button.getAttribute('data-job-id');
         const jobTitle = button.getAttribute('data-job-title');
-        
+
         deleteJobTitle.textContent = jobTitle;
-        deleteForm.action = `/jobs/${jobId}/delete`;
+        deleteForm.action = button.getAttribute('data-delete-url');
     });
 });
 </script>

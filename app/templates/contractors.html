@@ -7,7 +7,7 @@
     <div class="col-md-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-users"></i> Contractors</h1>
-            <a href="{{ url_for('add_contractor') }}" class="btn btn-primary">
+            <a href="{{ url_for('contractors.add') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add New Contractor
             </a>
         </div>
@@ -57,7 +57,7 @@
                 <div class="text-center py-4">
                     <i class="fas fa-users fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No contractors have been added yet.</p>
-                    <a href="{{ url_for('add_contractor') }}" class="btn btn-primary">Add Your First Contractor</a>
+                    <a href="{{ url_for('contractors.add') }}" class="btn btn-primary">Add Your First Contractor</a>
                 </div>
                 {% endif %}
             </div>

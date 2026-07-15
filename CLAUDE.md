@@ -5,23 +5,32 @@ Flask web app for UK property-maintenance management: flats (properties + tenanc
 ## Commands (Windows, PowerShell)
 
 ```powershell
-venv\Scripts\python.exe app.py      # run dev server → http://127.0.0.1:5000
+venv\Scripts\python.exe run.py      # run dev server → http://127.0.0.1:5000
 venv\Scripts\pip.exe install -r requirements.txt
+$env:FLASK_APP = "run.py"; venv\Scripts\flask.exe backup|list-backups|restore N
 ```
 
 There is no test suite yet (planned; see Roadmap). Always use the project venv — the system Python does not have the dependencies.
 
 ## Architecture
 
-- `app.py` — everything: Flask app, 3 SQLAlchemy models (`Flat`, `Contractor`, `MaintenanceJob`), ~25 routes, Excel import/export via pandas (lazy-imported inside routes).
-- `migrate.py` — idempotent, PRAGMA-based column-add migrations; runs automatically at startup from `app.py`'s `__main__` block. SQLite can't easily drop/alter columns, so migrations only ever ADD columns and backfill.
-- `backup_manager.py` — standalone backup/restore CLI (`python backup_manager.py backup|list|restore N`).
-- `templates/` — Jinja2 + Bootstrap 5 (CDN), styling currently inline per template.
+App-factory + blueprints (Flask 3.1, SQLAlchemy 2.0 style — `Mapped` models, `db.session.scalars(select(...))`, `db.get_or_404`):
+
+- `run.py` — entry point; debug/host/port from `FLASK_DEBUG`/`HOST`/`PORT` env vars.
+- `app/__init__.py` — `create_app()`, blueprint registration, `gbp`/`ukdate` template filters, 404/500 handlers.
+- `app/models.py` — `Flat`, `Contractor`, `MaintenanceJob` + `SoftDeleteMixin` (`active_select()` / `deleted_select()` / `soft_delete()` / `restore()`). Status/priority constants live here.
+- `app/blueprints/` — `dashboard`, `jobs`, `flats`, `contractors`, `recycle` (endpoints are `blueprint.name`, e.g. `jobs.index`; recycle uses `kind` + `item_id` params for all three models).
+- `app/services/excel_io.py` — Excel import/export. Parsing helpers (`clean_rent_value`, `parse_uk_date`, `clean_due_date`) are dependency-free; pandas is lazy-imported only inside `import_flats_from_file` / `build_jobs_export`.
+- `app/db_migrate.py` — `ensure_schema()`: idempotent PRAGMA-based column adds + `create_all()`; runs in `create_app()` when `RUN_SCHEMA_SYNC` is true (off in `TestConfig`). Migrations only ever ADD columns and backfill.
+- `app/cli.py` — `flask backup` / `list-backups` / `restore N`; paths derive from `app.instance_path` so they always hit the live DB.
+- `app/templates/` — Jinja2 + Bootstrap 5 (CDN), styling currently inline per template (redesign pending).
 - **Live database: `instance/maintenance_tracker.db`** — NOT the root path that `DATABASE_URL=sqlite:///maintenance_tracker.db` appears to point at. Flask-SQLAlchemy 3.x resolves relative SQLite paths against `app.instance_path`. This looks wrong but is correct; don't "fix" it.
 
 ### Roadmap (agreed with Ralph, July 2026)
 
-Portfolio upgrade in phases: (1) modernize deps to Flask 3.1, (2) app-factory + blueprints refactor (`run.py` + `app/` package), (3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI, (4) full UI redesign — clean SaaS design system (token-based CSS, sidebar shell), (5) analytics page with Chart.js, (6) README + screenshots. Update this file as phases land.
+Portfolio upgrade in phases: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ (3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI, (4) full UI redesign — clean SaaS design system (token-based CSS, sidebar shell), (5) analytics page with Chart.js, (6) README + screenshots. Update this file as phases land.
+
+Known bugs deliberately deferred to phase 3 (fix test-first): flats list shows soft-deleted flats; `delete_flat` hard-deletes (never reaches bin) and errors if the flat has any jobs; contractors have no edit/delete; export includes deleted jobs; `complete_job` ignores the posted completion date; no CSRF yet.
 
 ## Domain conventions
 

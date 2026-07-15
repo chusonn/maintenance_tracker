@@ -84,7 +84,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
                 <i class="fas fa-tools"></i> Maintenance Tracker
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -93,27 +93,27 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <a class="nav-link" href="{{ url_for('dashboard.index') }}">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('jobs') }}">
+                        <a class="nav-link" href="{{ url_for('jobs.index') }}">
                             <i class="fas fa-tasks"></i> Jobs
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('flats') }}">
+                        <a class="nav-link" href="{{ url_for('flats.index') }}">
                             <i class="fas fa-home"></i> Flats
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contractors') }}">
+                        <a class="nav-link" href="{{ url_for('contractors.index') }}">
                             <i class="fas fa-users"></i> Contractors
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('recycle_bin') }}">
+                        <a class="nav-link" href="{{ url_for('recycle.index') }}">
                             <i class="fas fa-recycle"></i> Recycle Bin
                         </a>
                     </li>
