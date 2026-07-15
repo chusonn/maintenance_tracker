@@ -785,7 +785,7 @@ def add_job():
             description=request.form['description'],
             priority=request.form['priority'],
             estimated_cost=estimated_cost,
-            reported_date=datetime.now()
+            reported_date=date.today()
         )
         db.session.add(job)
         db.session.commit()
@@ -864,17 +864,16 @@ if __name__ == '__main__':
     with app.app_context():
         # Run migrations before starting app
         from migrate import migrate_database
-        
-        print("🔄 Checking database migrations...")
-        migration_needed = migrate_database()
-        
-        if migration_needed:
-            print("✅ Database migrated successfully!")
-        else:
-            print("✅ Database is up to date!")
-        
+
+        print("Checking database migrations...")
+        migrate_database()
+
         # Create tables if they don't exist
         db.create_all()
-        print("✅ Database tables ready!")
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
+        print("Database ready.")
+
+    app.run(
+        debug=os.getenv('FLASK_DEBUG', '0') == '1',
+        host=os.getenv('HOST', '127.0.0.1'),
+        port=int(os.getenv('PORT', '5000')),
+    )
