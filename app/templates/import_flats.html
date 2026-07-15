@@ -1,88 +1,44 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, csrf %}
 
 {% block title %}Import Flats - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1><i class="fas fa-file-excel"></i> Import Flats from Excel</h1>
-        <p class="text-muted">Import multiple flats at once from an Excel file</p>
-    </div>
-</div>
+{% call page_header('Import Flats', 'Upload an Excel sheet to create or update properties') %}
+    <a href="{{ url_for('flats.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to flats</a>
+{% endcall %}
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="mt-card">
+            <div class="mt-card-body">
                 <form method="POST" enctype="multipart/form-data">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ csrf() }}
                     <div class="mb-3">
-                        <label for="file" class="form-label">Select Excel File</label>
+                        <label for="file" class="form-label">Excel file (.xlsx or .xls) *</label>
                         <input type="file" name="file" id="file" class="form-control" accept=".xlsx,.xls" required>
-                        <div class="form-text">
-                            Supported formats: .xlsx, .xls
-                        </div>
+                        <div class="form-text">Rows are matched on Payment Reference — existing flats are updated, new ones created.</div>
                     </div>
-
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle"></i> Expected Excel Columns</h6>
-                        <p class="mb-2">Your Excel file should contain the following columns:</p>
-                        <ul class="small">
-                            <li><strong>Flat No.</strong> - Flat number (required)</li>
-                            <li><strong>Payment Reference</strong> - Payment reference code</li>
-                            <li><strong>Tenancy / Property Address</strong> - Full property address (required)</li>
-                            <li><strong>Tenancy / Property Postcode</strong> - Postal code</li>
-                            <li><strong>Tenants</strong> - Tenant name(s)</li>
-                            <li><strong>Tenant Contact Details</strong> - Contact information</li>
-                            <li><strong>Rent</strong> - Monthly rent amount</li>
-                            <li><strong>Due Date</strong> - Day of month rent is due (1-31)</li>
-                            <li><strong>Tenancy Start Date</strong> - Tenancy start date</li>
-                            <li><strong>Tenancy End Date</strong> - Tenancy end date</li>
-                            <li><strong>Landlord</strong> - Landlord name</li>
-                        </ul>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('flats.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-upload"></i> Import Flats
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-primary">{{ icon('upload', 16) }} Import</button>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Import Tips</h5>
-            </div>
-            <div class="card-body">
-                <h6>Before Importing:</h6>
-                <ul class="small">
-                    <li>Ensure column names match exactly</li>
-                    <li>Save Excel file as .xlsx format</li>
-                    <li>Check for empty rows in your data</li>
-                    <li>Verify flat numbers are unique</li>
-                    <li>Make sure dates are in valid format</li>
+    <div class="col-lg-5">
+        <div class="mt-card">
+            <div class="mt-card-header"><h2 class="mt-card-title">Expected columns</h2></div>
+            <div class="mt-card-body">
+                <ul class="mb-2" style="padding-left: 1.1rem;">
+                    <li><strong>Payment Reference</strong> (required, unique)</li>
+                    <li><strong>Tenancy / Property Address</strong> (required)</li>
+                    <li>Flat No.</li>
+                    <li>Tenancy / Property Postcode</li>
+                    <li>Tenants · Tenant Contact Details</li>
+                    <li>Rent · Due Date · Landlord</li>
+                    <li>Tenancy Start Date · Tenancy End Date <span class="mt-meta">(dd/mm/yyyy)</span></li>
                 </ul>
-                <hr>
-                <h6>Import Process:</h6>
-                <ul class="small">
-                    <li>Existing flats will be updated</li>
-                    <li>New flats will be created</li>
-                    <li>Duplicate flat numbers merge data</li>
-                    <li>Empty cells are ignored</li>
-                </ul>
-                <hr>
-                <h6>After Import:</h6>
-                <ul class="small">
-                    <li>Review imported data for accuracy</li>
-                    <li>Check any failed imports</li>
-                    <li>Update missing information manually</li>
-                </ul>
+                <p class="mt-meta mb-0">Rows missing a payment reference or address are skipped. £ signs, commas and multi-line cells in Rent are handled automatically.</p>
             </div>
         </div>
     </div>

@@ -4,141 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Maintenance Tracker{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 10px;
-            }
-            .btn-group {
-                flex-direction: column;
-                width: 100%;
-            }
-            .btn-group .btn {
-                margin-bottom: 5px;
-                border-radius: 0.375rem !important;
-            }
-            .table-responsive {
-                font-size: 0.875rem;
-            }
-            .card-body {
-                padding: 1rem;
-            }
-            .navbar-brand {
-                font-size: 1rem;
-            }
-            .nav-link {
-                padding: 0.5rem 1rem !important;
-            }
-        }
-        
-        /* Touch-friendly buttons */
-        .btn {
-            min-height: 44px;
-            min-width: 44px;
-        }
-        
-        /* Better mobile tables */
-        .table-mobile-stack {
-            display: block;
-        }
-        .table-mobile-stack thead {
-            display: none;
-        }
-        .table-mobile-stack tbody,
-        .table-mobile-stack tr,
-        .table-mobile-stack td {
-            display: block;
-            width: 100% !important;
-        }
-        .table-mobile-stack tr {
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .table-mobile-stack td:before {
-            content: attr(data-label) ": ";
-            font-weight: bold;
-            color: #007bff;
-        }
-        
-        /* Mobile-friendly cards */
-        .mobile-card {
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        /* Sticky header on mobile */
-        @media (max-width: 768px) {
-            .navbar {
-                position: sticky;
-                top: 0;
-                z-index: 1000;
-            }
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
-                <i class="fas fa-tools"></i> Maintenance Tracker
+{% from "_icons.html" import icon %}
+<div class="mt-shell">
+    <aside class="mt-sidebar">
+        <a class="mt-sidebar-brand" href="{{ url_for('dashboard.index') }}">
+            <span class="mt-logo">{{ icon('wrench', 16) }}</span>
+            Maintenance Tracker
+        </a>
+        <nav class="mt-nav">
+            <span class="mt-nav-label">Overview</span>
+            <a class="mt-nav-link {{ 'active' if request.endpoint == 'dashboard.index' }}" href="{{ url_for('dashboard.index') }}">
+                {{ icon('layout-dashboard', 18) }} Dashboard
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard.index') }}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('jobs.index') }}">
-                            <i class="fas fa-tasks"></i> Jobs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('flats.index') }}">
-                            <i class="fas fa-home"></i> Flats
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contractors.index') }}">
-                            <i class="fas fa-users"></i> Contractors
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('recycle.index') }}">
-                            <i class="fas fa-recycle"></i> Recycle Bin
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            <span class="mt-nav-label">Manage</span>
+            <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('jobs.') }}" href="{{ url_for('jobs.index') }}">
+                {{ icon('wrench', 18) }} Jobs
+            </a>
+            <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('flats.') }}" href="{{ url_for('flats.index') }}">
+                {{ icon('home', 18) }} Flats
+            </a>
+            <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('contractors.') }}" href="{{ url_for('contractors.index') }}">
+                {{ icon('users', 18) }} Contractors
+            </a>
+            <span class="mt-nav-label">System</span>
+            <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('recycle.') }}" href="{{ url_for('recycle.index') }}">
+                {{ icon('trash', 18) }} Recycle Bin
+            </a>
+        </nav>
+        <div class="mt-sidebar-footer">
+            UK property maintenance&nbsp;·&nbsp;local &amp; private
         </div>
-    </nav>
+    </aside>
+    <div class="mt-backdrop"></div>
 
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% set alert_class = {'success': 'alert-success', 'warning': 'alert-warning',
-                                      'danger': 'alert-danger', 'error': 'alert-danger'} %}
-                {% for category, message in messages %}
-                    <div class="alert {{ alert_class.get(category, 'alert-info') }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+    <div class="mt-main">
+        <header class="mt-topbar">
+            <button class="btn btn-outline-secondary btn-sm d-lg-none" data-role="sidebar-toggle" aria-label="Toggle navigation">
+                {{ icon('menu', 16) }}
+            </button>
+            <div class="d-none d-lg-block"></div>
+            <div class="mt-page-actions">
+                {% block topbar_actions %}{% endblock %}
+            </div>
+        </header>
 
-        {% block content %}{% endblock %}
+        <main class="mt-content">
+            {% block content %}{% endblock %}
+        </main>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<div class="mt-toast-region" aria-live="polite">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="mt-toast {{ category if category in ['success', 'warning', 'danger', 'error', 'info'] else 'info' }}" role="status">
+            <span class="mt-toast-accent"></span>
+            <span>{{ message }}</span>
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()" aria-label="Dismiss"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

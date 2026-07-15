@@ -1,509 +1,163 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, stat_card, status_badge, priority_badge, followup_badge, empty_state, csrf, pagination %}
 
 {% block title %}Jobs - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<style>
-/* Modern Job Cards Design */
-.job-card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    margin-bottom: 20px;
-    overflow: hidden;
-}
+{% call page_header('Maintenance Jobs', 'Manage and track all maintenance requests') %}
+    <a href="{{ url_for('jobs.export') }}" class="btn btn-outline-secondary">{{ icon('download', 16) }} Export</a>
+    <a href="{{ url_for('jobs.add') }}" class="btn btn-primary">{{ icon('plus', 16) }} New Job</a>
+{% endcall %}
 
-.job-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">{{ stat_card('Pending', status_counts.pending, 'clock', 'warning') }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card('In progress', status_counts.in_progress, 'bar-chart', 'info') }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card('Completed', status_counts.completed, 'check-circle', 'success') }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card('Need follow-up', status_counts.need_followup, 'mail', 'danger') }}</div>
+</div>
 
-.job-card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    position: relative;
-}
-
-.job-card-body {
-    padding: 20px;
-}
-
-.priority-badge {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 0.75rem;
-    padding: 4px 12px;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
-}
-
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 6px;
-}
-
-.status-pending { background: #ffc107; }
-.status-in-progress { background: #17a2b8; }
-.status-completed { background: #28a745; }
-.status-scheduled { background: #6f42c1; }
-
-.job-meta {
-    display: flex;
-    gap: 20px;
-    margin: 15px 0;
-    flex-wrap: wrap;
-}
-
-.job-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-.job-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-}
-
-.job-actions .btn {
-    border-radius: 8px;
-    font-size: 0.875rem;
-    padding: 8px 16px;
-}
-
-.follow-up-indicator {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 8px;
-    padding: 10px;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.search-modern {
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    padding: 12px 16px;
-    transition: all 0.3s ease;
-}
-
-.search-modern:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    background: white;
-}
-
-.filter-card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.stats-card {
-    border: none;
-    border-radius: 16px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-}
-
-.stats-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 50%;
-    transform: translate(30px, -30px);
-}
-
-@media (max-width: 768px) {
-    .job-card {
-        margin-bottom: 15px;
-    }
-    
-    .job-meta {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .job-actions {
-        flex-direction: column;
-    }
-    
-    .job-actions .btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-</style>
-
-<!-- Header with Actions -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="mb-1"><i class="fas fa-tasks text-primary"></i> Maintenance Jobs</h1>
-                <p class="text-muted mb-0">Manage and track all maintenance requests</p>
+<div class="mt-card mb-4">
+    <div class="mt-card-body">
+        <form method="GET" class="mt-filter-bar">
+            <div style="flex: 2; min-width: 200px;">
+                <label class="form-label" for="search">Search</label>
+                <input type="text" name="search" id="search" class="form-control"
+                       placeholder="Title, description, reference, address…" value="{{ search_query or '' }}">
+            </div>
+            <div style="flex: 1; min-width: 130px;">
+                <label class="form-label" for="status">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All</option>
+                    {% for s in ['Pending', 'Scheduled', 'In Progress', 'Completed', 'Cancelled'] %}
+                    <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 130px;">
+                <label class="form-label" for="priority">Priority</label>
+                <select name="priority" id="priority" class="form-select">
+                    <option value="">All</option>
+                    {% for p in ['Low', 'Medium', 'High', 'Urgent'] %}
+                    <option value="{{ p }}" {{ 'selected' if priority_filter == p }}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="min-width: 140px;">
+                <label class="form-label" for="date_from">From</label>
+                <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from or '' }}">
+            </div>
+            <div style="min-width: 140px;">
+                <label class="form-label" for="date_to">To</label>
+                <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to or '' }}">
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ url_for('jobs.export') }}" class="btn btn-success">
-                    <i class="fas fa-file-excel"></i> Export
-                    <span class="badge bg-light text-dark ms-1">{{ jobs.total }}</span>
-                </a>
-                <a href="{{ url_for('jobs.add') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> New Job
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="stats-card bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ status_counts.pending }}</h3>
-                    <p class="mb-0">Pending</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-clock fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card bg-info text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ status_counts.in_progress }}</h3>
-                    <p class="mb-0">In Progress</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-spinner fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card bg-success text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ status_counts.completed }}</h3>
-                    <p class="mb-0">Completed</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-check-circle fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card bg-warning text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ status_counts.need_followup }}</h3>
-                    <p class="mb-0">Need Follow-up</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-envelope fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Search and Filters -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="filter-card">
-            <div class="card-body">
-                <form method="GET" class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Search</label>
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control search-modern" 
-                                   placeholder="Search jobs, flats, descriptions..." 
-                                   value="{{ search_query or '' }}">
-                            <button type="submit" class="btn btn-outline-primary">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Status</label>
-                        <select name="status" class="form-select">
-                            <option value="">All Statuses</option>
-                            <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
-                            <option value="Scheduled" {% if status_filter == 'Scheduled' %}selected{% endif %}>Scheduled</option>
-                            <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
-                            <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Priority</label>
-                        <select name="priority" class="form-select">
-                            <option value="">All Priorities</option>
-                            <option value="Urgent" {% if priority_filter == 'Urgent' %}selected{% endif %}>Urgent</option>
-                            <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High</option>
-                            <option value="Medium" {% if priority_filter == 'Medium' %}selected{% endif %}>Medium</option>
-                            <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">From Date</label>
-                        <input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold">Actions</label>
-                        <div class="btn-group w-100">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-filter"></i> Filter
-                            </button>
-                            <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i> Clear
-                            </a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Jobs Grid -->
-<div class="row">
-    {% if jobs.items %}
-        {% for job in jobs.items %}
-        <div class="col-lg-6 col-xl-4">
-            <div class="job-card">
-                <div class="job-card-header">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5 class="mb-1">{{ job.title }}</h5>
-                            <p class="mb-0 opacity-75">{{ job.flat.payment_reference }} • {{ job.flat.flat_number or 'No Flat No' }}</p>
-                        </div>
-                        <div class="priority-badge">
-                            {{ job.priority }}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="job-card-body">
-                    <!-- Status Indicator -->
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="status-indicator status-{{ job.status|lower|replace(' ', '-') }}"></span>
-                        <span class="fw-bold">{{ job.status }}</span>
-                        {% if job.status in ['Pending', 'Scheduled', 'In Progress'] and job.follow_up_count == 0 %}
-                            <span class="badge bg-warning ms-2">Needs Follow-up</span>
-                        {% elif job.follow_up_count > 0 %}
-                            <span class="badge bg-success ms-2">{{ job.follow_up_count }} Follow-up{{ 's' if job.follow_up_count != 1 else '' }}</span>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Description -->
-                    {% if job.description %}
-                    <p class="text-muted mb-3">{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}</p>
-                    {% endif %}
-                    
-                    <!-- Meta Information -->
-                    <div class="job-meta">
-                        <div class="job-meta-item">
-                            <i class="fas fa-calendar"></i>
-                            <span>{{ job.reported_date.strftime('%d/%m/%Y') if job.reported_date else 'Not set' }}</span>
-                        </div>
-                        {% if job.contractor %}
-                        <div class="job-meta-item">
-                            <i class="fas fa-user"></i>
-                            <span>{{ job.contractor.name }}</span>
-                        </div>
-                        {% endif %}
-                        {% if job.scheduled_date %}
-                        <div class="job-meta-item">
-                            <i class="fas fa-clock"></i>
-                            <span>{{ job.scheduled_date.strftime('%d/%m/%Y') if job.scheduled_date else 'Not scheduled' }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Follow-up Indicator -->
-                    {% if job.follow_up_count > 0 %}
-                    <div class="follow-up-indicator">
-                        <i class="fas fa-envelope text-warning"></i>
-                        <div class="flex-grow-1">
-                            <small class="fw-bold">Last follow-up: {{ job.follow_up_date.strftime('%d/%m/%Y') if job.follow_up_date else 'No date' }}</small>
-                            {% if job.follow_up_notes %}
-                            <br><small class="text-muted">{{ job.follow_up_notes[:50] }}{% if job.follow_up_notes|length > 50 %}...{% endif %}</small>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Action Buttons -->
-                    <div class="job-actions">
-                        <a href="{{ url_for('jobs.edit', job_id=job.id) }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        
-                        {% if job.status == 'Pending' %}
-                            <a href="{{ url_for('jobs.schedule', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-calendar"></i> Schedule
-                            </a>
-                        {% elif job.status in ['Scheduled', 'In Progress'] %}
-                            {% if job.follow_up_count == 0 %}
-                                <a href="{{ url_for('jobs.followup', job_id=job.id) }}" class="btn btn-outline-warning btn-sm">
-                                    <i class="fas fa-envelope"></i> Follow-up
-                                </a>
-                            {% endif %}
-                            <a href="{{ url_for('jobs.complete', job_id=job.id) }}" class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-check"></i> Complete
-                            </a>
-                        {% endif %}
-                        
-                        <!-- Delete Button -->
-                        <button type="button" class="btn btn-outline-danger btn-sm" 
-                                data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                data-delete-url="{{ url_for('jobs.delete', job_id=job.id) }}" data-job-title="{{ job.title }}">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-tasks fa-4x text-muted mb-3"></i>
-                <h4 class="text-muted">No jobs found</h4>
-                <p class="text-muted">Try adjusting your filters or create your first job.</p>
-                <a href="{{ url_for('jobs.add') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Your First Job
-                </a>
-            </div>
-        </div>
-    {% endif %}
-</div>
-
-<!-- Pagination -->
-{% if jobs.pages > 1 %}
-<div class="row mt-4">
-    <div class="col-12">
-        <nav aria-label="Jobs pagination">
-            <ul class="pagination justify-content-center">
-                {% if jobs.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('jobs.index', page=jobs.prev_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </a>
-                    </li>
+                <button type="submit" class="btn btn-primary">{{ icon('search', 14) }} Filter</button>
+                {% if search_query or status_filter or priority_filter or date_from or date_to %}
+                <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">Clear</a>
                 {% endif %}
-                
-                {% for page_num in jobs.iter_pages() %}
-                    {% if page_num %}
-                        {% if page_num != jobs.page %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('jobs.index', page=page_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
-                                    {{ page_num }}
-                                </a>
-                            </li>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-card">
+    <div class="mt-card-body flush mt-table-wrap">
+        {% if jobs.items %}
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Job</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Contractor</th>
+                    <th>Follow-up</th>
+                    <th>Reported</th>
+                    <th>Cost</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs.items %}
+                <tr>
+                    <td class="primary">{{ job.flat.payment_reference }}</td>
+                    <td>
+                        <div class="primary">{{ job.title }}</div>
+                        <div class="mt-meta">{{ job.flat.address | truncate(48) }}</div>
+                    </td>
+                    <td>{{ priority_badge(job.priority) }}</td>
+                    <td>{{ status_badge(job.status) }}</td>
+                    <td>{{ job.contractor.name if job.contractor else '—' }}</td>
+                    <td>{{ followup_badge(job) }}</td>
+                    <td>{{ job.reported_date | ukdate }}</td>
+                    <td>
+                        {% if job.actual_cost is not none %}
+                            {{ job.actual_cost | gbp }}
+                        {% elif job.estimated_cost is not none %}
+                            <span class="mt-meta">est. {{ job.estimated_cost | gbp }}</span>
                         {% else %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ page_num }}</span>
-                            </li>
+                            <span class="mt-meta">—</span>
                         {% endif %}
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
-                    {% endif %}
+                    </td>
+                    <td>
+                        <div class="mt-row-actions">
+                            {% if job.status == 'Pending' %}
+                            <a href="{{ url_for('jobs.schedule', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm" title="Schedule">
+                                {{ icon('calendar', 14) }}
+                            </a>
+                            {% elif job.status in ['Scheduled', 'In Progress'] %}
+                            <a href="{{ url_for('jobs.followup', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm" title="Follow up">
+                                {{ icon('mail', 14) }}
+                            </a>
+                            <a href="{{ url_for('jobs.complete', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm" title="Complete">
+                                {{ icon('check', 14) }}
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('jobs.edit', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm" title="Edit">
+                                {{ icon('pencil', 14) }}
+                            </a>
+                            <button type="button" class="btn btn-outline-danger btn-sm" title="Delete"
+                                    data-bs-toggle="modal" data-bs-target="#mtDeleteModal"
+                                    data-delete-url="{{ url_for('jobs.delete', job_id=job.id) }}"
+                                    data-delete-label="{{ job.title }}">
+                                {{ icon('trash', 14) }}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
-                
-                {% if jobs.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('jobs.index', page=jobs.next_num, status=status_filter, priority=priority_filter, search=search_query, date_from=date_from, date_to=date_to) }}">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-        
-        <div class="text-center mt-3">
-            <small class="text-muted">
-                Showing {{ jobs.items | length }} of {{ jobs.total }} jobs 
-                (Page {{ jobs.page }} of {{ jobs.pages }})
-            </small>
-        </div>
+            </tbody>
+        </table>
+        {{ pagination(jobs, 'jobs.index') }}
+        {% elif search_query or status_filter or priority_filter or date_from or date_to %}
+        {{ empty_state('search', 'No matching jobs', 'Try adjusting or clearing the filters above.') }}
+        {% else %}
+        {{ empty_state('inbox', 'No jobs yet', 'Create your first maintenance job to get started.', url_for('jobs.add'), 'New Job') }}
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Shared delete confirmation modal -->
+<div class="modal fade" id="mtDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">
-                    <i class="fas fa-exclamation-triangle text-warning"></i> Confirm Delete
-                </h5>
+                <h5 class="modal-title">Move job to recycle bin?</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this job?</p>
-                <p class="text-muted">
-                    <strong id="deleteJobTitle"></strong><br>
-                    <small>This action cannot be undone.</small>
-                </p>
+                <p class="mb-0">"<span data-role="delete-label"></span>" will move to the recycle bin.
+                You can restore it from there at any time.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Delete Job
-                    </button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST">
+                    {{ csrf() }}
+                    <button type="submit" class="btn btn-danger">{{ icon('trash', 14) }} Delete</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Add JavaScript for delete modal -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteModal = document.getElementById('deleteModal');
-    const deleteForm = document.getElementById('deleteForm');
-    const deleteJobTitle = document.getElementById('deleteJobTitle');
-    
-    deleteModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const jobTitle = button.getAttribute('data-job-title');
-
-        deleteJobTitle.textContent = jobTitle;
-        deleteForm.action = button.getAttribute('data-delete-url');
-    });
-});
-</script>
-
 {% endblock %}

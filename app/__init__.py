@@ -49,6 +49,15 @@ def _register_template_filters(app: Flask) -> None:
             return "—"
         return value.strftime("%d/%m/%Y")
 
+    @app.template_global("url_with_page")
+    def url_with_page(page: int) -> str:
+        """Current URL with the page query param swapped (keeps filters)."""
+        from flask import request, url_for
+
+        args = request.args.to_dict()
+        args["page"] = page
+        return url_for(request.endpoint, **args)
+
 
 def _register_error_handlers(app: Flask) -> None:
     @app.errorhandler(404)

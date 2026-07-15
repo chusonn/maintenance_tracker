@@ -1,98 +1,44 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, form_field, form_textarea, form_select, csrf %}
 
-{% block title %}Add Job - Maintenance Tracker{% endblock %}
+{% block title %}New Job - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1><i class="fas fa-plus"></i> Add New Maintenance Job</h1>
-        <p class="text-muted">Create a new maintenance request</p>
-    </div>
-</div>
+{% call page_header('New Job', 'Log a maintenance request against a property') %}
+    <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to jobs</a>
+{% endcall %}
 
 <div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
+    <div class="col-lg-8">
+        <div class="mt-card">
+            <div class="mt-card-body">
                 <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ csrf() }}
                     <div class="mb-3">
-                        <label for="flat_id" class="form-label">Flat *</label>
+                        <label for="flat_id" class="form-label">Property *</label>
                         <select name="flat_id" id="flat_id" class="form-select" required>
-                            <option value="">Select a flat</option>
+                            <option value="">Select a flat…</option>
                             {% for flat in flats %}
-                            <option value="{{ flat.id }}">{{ flat.payment_reference }} - {{ flat.flat_number or 'No Flat No' }} - {{ flat.address }}</option>
+                            <option value="{{ flat.id }}">{{ flat.payment_reference }} — {{ flat.address | truncate(50) }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Job Title *</label>
-                        <input type="text" name="title" id="title" class="form-control" required 
-                               placeholder="e.g., Leaking kitchen faucet">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="4" 
-                                  placeholder="Provide detailed information about the maintenance issue..."></textarea>
-                    </div>
-
+                    {{ form_field('title', 'Title', required=True, placeholder='e.g. Boiler not heating water') }}
+                    {{ form_textarea('description', 'Description', rows=4, placeholder='What is wrong, where, since when…') }}
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="priority" class="form-label">Priority</label>
-                                <select name="priority" id="priority" class="form-select">
-                                    <option value="Low">Low</option>
-                                    <option value="Medium" selected>Medium</option>
-                                    <option value="High">High</option>
-                                    <option value="Urgent">Urgent</option>
-                                </select>
-                            </div>
+                            {{ form_select('priority', 'Priority', [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Urgent', 'Urgent')], selected='Medium', required=True) }}
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="estimated_cost" class="form-label">Estimated Cost</label>
-                                <input type="number" name="estimated_cost" id="estimated_cost" class="form-control" 
-                                       step="0.01" min="0" placeholder="0.00">
-                            </div>
+                            {{ form_field('estimated_cost', 'Estimated cost (£)', type='number', step='0.01', min=0, placeholder='0.00') }}
                         </div>
                     </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('jobs.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Create Job
-                        </button>
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary">{{ icon('plus', 16) }} Create Job</button>
+                        <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Priority Guidelines</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h6 class="text-danger"><strong>Urgent</strong></h6>
-                    <p class="small text-muted">Safety hazards, major water leaks, no heating in winter, electrical issues</p>
-                </div>
-                <div class="mb-3">
-                    <h6 class="text-warning"><strong>High</strong></h6>
-                    <p class="small text-muted">Minor leaks, appliance breakdowns, security issues</p>
-                </div>
-                <div class="mb-3">
-                    <h6 class="text-info"><strong>Medium</strong></h6>
-                    <p class="small text-muted">Non-urgent repairs, cosmetic issues, scheduled maintenance</p>
-                </div>
-                <div class="mb-3">
-                    <h6 class="text-secondary"><strong>Low</strong></h6>
-                    <p class="small text-muted">Minor cosmetic issues, improvements, non-essential repairs</p>
-                </div>
             </div>
         </div>
     </div>

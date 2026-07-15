@@ -1,302 +1,141 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, status_badge, empty_state, csrf %}
 
 {% block title %}Recycle Bin - Maintenance Tracker{% endblock %}
 
+{% macro restore_purge(kind, item, label) %}
+<div class="mt-row-actions">
+    <form method="POST" action="{{ url_for('recycle.restore', kind=kind, item_id=item.id) }}">
+        {{ csrf() }}
+        <button type="submit" class="btn btn-outline-secondary btn-sm" title="Restore">
+            {{ icon('rotate-ccw', 14) }} Restore
+        </button>
+    </form>
+    <form method="POST" action="{{ url_for('recycle.purge', kind=kind, item_id=item.id) }}"
+          data-confirm="Permanently delete {{ label }}? This cannot be undone.">
+        {{ csrf() }}
+        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete forever">
+            {{ icon('trash', 14) }}
+        </button>
+    </form>
+</div>
+{% endmacro %}
+
 {% block content %}
-<style>
-.recycle-item {
-    border-left: 4px solid #dc3545;
-    background: #fff5f5;
-    transition: all 0.3s ease;
-}
+{{ page_header('Recycle Bin', 'Deleted items can be restored or removed permanently') }}
 
-.recycle-item:hover {
-    border-left-color: #c82333;
-    background: #fff0f0;
-}
-
-.deleted-date {
-    color: #6c757d;
-    font-size: 0.875rem;
-}
-
-.restore-btn {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    border: none;
-    color: white;
-}
-
-.restore-btn:hover {
-    background: linear-gradient(135deg, #218838, #1ea085);
-    transform: translateY(-1px);
-}
-
-.permanent-delete-btn {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    border: none;
-    color: white;
-}
-
-.permanent-delete-btn:hover {
-    background: linear-gradient(135deg, #c82333, #bd2130);
-    transform: translateY(-1px);
-}
-
-.stats-card {
-    border: none;
-    border-radius: 12px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-}
-
-.stats-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 80px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 50%;
-    transform: translate(20px, -20px);
-}
-
-@media (max-width: 768px) {
-    .action-buttons {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .action-buttons .btn {
-        width: 100%;
-    }
-}
-</style>
-
-<!-- Header -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="mb-1"><i class="fas fa-recycle text-danger"></i> Recycle Bin</h1>
-                <p class="text-muted mb-0">Restore accidentally deleted items</p>
-            </div>
-            <div>
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="stats-card bg-danger text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ deleted_jobs | length }}</h3>
-                    <p class="mb-0">Deleted Jobs</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-tasks fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stats-card bg-warning text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ deleted_flats | length }}</h3>
-                    <p class="mb-0">Deleted Flats</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-home fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stats-card bg-secondary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">{{ deleted_contractors | length }}</h3>
-                    <p class="mb-0">Deleted Contractors</p>
-                </div>
-                <div class="opacity-50">
-                    <i class="fas fa-users fa-2x"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Deleted Jobs -->
-{% if deleted_jobs %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-tasks"></i> Deleted Jobs ({{ deleted_jobs | length }})</h5>
-            </div>
-            <div class="card-body">
-                {% for job in deleted_jobs %}
-                <div class="recycle-item p-3 mb-3 rounded">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-1">{{ job.title }}</h6>
-                            <p class="mb-1 text-muted">
-                                <strong>Flat:</strong> {{ job.flat.payment_reference }} - {{ job.flat.flat_number or 'No Flat No' }}<br>
-                                <strong>Status:</strong> {{ job.status }} | 
-                                <strong>Priority:</strong> {{ job.priority }}
-                                {% if job.contractor %}| <strong>Contractor:</strong> {{ job.contractor.name }}{% endif %}
-                            </p>
-                            <p class="deleted-date mb-0">
-                                <i class="fas fa-trash"></i> Deleted on {{ job.deleted_at.strftime('%d/%m/%Y %H:%M') if job.deleted_at else 'Unknown' }} by {{ job.deleted_by or 'Unknown' }}
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <div class="action-buttons d-flex gap-2 justify-content-end">
-                                <form method="POST" action="{{ url_for('recycle.restore', kind='job', item_id=job.id) }}" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn restore-btn btn-sm">
-                                        <i class="fas fa-undo"></i> Restore
-                                    </button>
-                                </form>
-                                <form method="POST" action="{{ url_for('recycle.purge', kind='job', item_id=job.id) }}" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn permanent-delete-btn btn-sm" 
-                                            onclick="return confirm('Are you sure? This will permanently delete this job and cannot be undone.')">
-                                        <i class="fas fa-trash"></i> Delete Forever
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Deleted Flats -->
-{% if deleted_flats %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-home"></i> Deleted Flats ({{ deleted_flats | length }})</h5>
-            </div>
-            <div class="card-body">
-                {% for flat in deleted_flats %}
-                <div class="recycle-item p-3 mb-3 rounded">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-1">{{ flat.payment_reference }} - {{ flat.flat_number }}</h6>
-                            <p class="mb-1 text-muted">
-                                <strong>Address:</strong> {{ flat.address }}<br>
-                                {% if flat.tenant_name %}<strong>Tenant:</strong> {{ flat.tenant_name }}<br>{% endif %}
-                                {% if flat.rent_amount %}<strong>Rent:</strong> ${{ "%.2f"|format(flat.rent_amount) }}{% endif %}
-                            </p>
-                            <p class="deleted-date mb-0">
-                                <i class="fas fa-trash"></i> Deleted on {{ flat.deleted_at.strftime('%d/%m/%Y %H:%M') if flat.deleted_at else 'Unknown' }} by {{ flat.deleted_by or 'Unknown' }}
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <div class="action-buttons d-flex gap-2 justify-content-end">
-                                <form method="POST" action="{{ url_for('recycle.restore', kind='flat', item_id=flat.id) }}" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn restore-btn btn-sm">
-                                        <i class="fas fa-undo"></i> Restore
-                                    </button>
-                                </form>
-                                <form method="POST" action="{{ url_for('recycle.purge', kind='flat', item_id=flat.id) }}" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn permanent-delete-btn btn-sm"
-                                            onclick="return confirm('Are you sure? This will permanently delete this flat and cannot be undone.')">
-                                        <i class="fas fa-trash"></i> Delete Forever
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Deleted Contractors -->
-{% if deleted_contractors %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-users"></i> Deleted Contractors ({{ deleted_contractors | length }})</h5>
-            </div>
-            <div class="card-body">
-                {% for contractor in deleted_contractors %}
-                <div class="recycle-item p-3 mb-3 rounded">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-1">{{ contractor.name }}</h6>
-                            <p class="mb-1 text-muted">
-                                {% if contractor.company %}<strong>Company:</strong> {{ contractor.company }}<br>{% endif %}
-                                {% if contractor.phone %}<strong>Phone:</strong> {{ contractor.phone }}<br>{% endif %}
-                                {% if contractor.email %}<strong>Email:</strong> {{ contractor.email }}<br>{% endif %}
-                                {% if contractor.specialty %}<strong>Specialty:</strong> {{ contractor.specialty }}{% endif %}
-                            </p>
-                            <p class="deleted-date mb-0">
-                                <i class="fas fa-trash"></i> Deleted on {{ contractor.deleted_at.strftime('%d/%m/%Y %H:%M') if contractor.deleted_at else 'Unknown' }} by {{ contractor.deleted_by or 'Unknown' }}
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <div class="action-buttons d-flex gap-2 justify-content-end">
-                                <form method="POST" action="{{ url_for('recycle.restore', kind='contractor', item_id=contractor.id) }}" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn restore-btn btn-sm">
-                                        <i class="fas fa-undo"></i> Restore
-                                    </button>
-                                </form>
-                                <form method="POST" action="{{ url_for('recycle.purge', kind='contractor', item_id=contractor.id) }}" style="display: inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn permanent-delete-btn btn-sm"
-                                            onclick="return confirm('Are you sure? This will permanently delete this contractor and cannot be undone.')">
-                                        <i class="fas fa-trash"></i> Delete Forever
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Empty State -->
 {% if not deleted_jobs and not deleted_flats and not deleted_contractors %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="text-center py-5">
-            <i class="fas fa-recycle fa-4x text-muted mb-3"></i>
-            <h4 class="text-muted">Recycle Bin is Empty</h4>
-            <p class="text-muted">No deleted items found. Everything is safe!</p>
-            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
+<div class="mt-card">
+    <div class="mt-card-body">
+        {{ empty_state('trash', 'The bin is empty', 'Deleted jobs, flats and contractors will appear here for recovery.') }}
     </div>
 </div>
 {% endif %}
 
+{% if deleted_jobs %}
+<div class="mt-card mb-4">
+    <div class="mt-card-header">
+        <h2 class="mt-card-title">Jobs</h2>
+        <span class="mt-badge tone-neutral">{{ deleted_jobs | length }}</span>
+    </div>
+    <div class="mt-card-body flush mt-table-wrap">
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Property</th>
+                    <th>Status</th>
+                    <th>Deleted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in deleted_jobs %}
+                <tr>
+                    <td class="primary">{{ job.title }}</td>
+                    <td>{{ job.flat.payment_reference }}</td>
+                    <td>
+                        {{ status_badge(job.status) }}
+                        {% if job.deleted_by == 'cascade:flat' %}
+                        <span class="mt-meta">with flat</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ job.deleted_at | ukdate }}</td>
+                    <td>{{ restore_purge('job', job, 'this job') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if deleted_flats %}
+<div class="mt-card mb-4">
+    <div class="mt-card-header">
+        <h2 class="mt-card-title">Flats</h2>
+        <span class="mt-badge tone-neutral">{{ deleted_flats | length }}</span>
+    </div>
+    <div class="mt-card-body flush mt-table-wrap">
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Address</th>
+                    <th>Tenant</th>
+                    <th>Rent</th>
+                    <th>Deleted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flat in deleted_flats %}
+                <tr>
+                    <td class="primary">{{ flat.payment_reference }}</td>
+                    <td>{{ flat.address | truncate(44) }}</td>
+                    <td>{{ flat.tenant_name or '—' }}</td>
+                    <td>{{ flat.rent_amount | gbp }}</td>
+                    <td>{{ flat.deleted_at | ukdate }}</td>
+                    <td>{{ restore_purge('flat', flat, 'this flat AND all its jobs') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if deleted_contractors %}
+<div class="mt-card mb-4">
+    <div class="mt-card-header">
+        <h2 class="mt-card-title">Contractors</h2>
+        <span class="mt-badge tone-neutral">{{ deleted_contractors | length }}</span>
+    </div>
+    <div class="mt-card-body flush mt-table-wrap">
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Specialty</th>
+                    <th>Deleted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contractor in deleted_contractors %}
+                <tr>
+                    <td class="primary">{{ contractor.name }}</td>
+                    <td>{{ contractor.company or '—' }}</td>
+                    <td><span class="mt-badge tone-neutral">{{ contractor.specialty or 'General' }}</span></td>
+                    <td>{{ contractor.deleted_at | ukdate }}</td>
+                    <td>{{ restore_purge('contractor', contractor, 'this contractor') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

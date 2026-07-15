@@ -1,182 +1,54 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, form_field, form_textarea, form_select, status_badge, csrf %}
 
 {% block title %}Edit Job - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1><i class="fas fa-edit"></i> Edit Maintenance Job</h1>
-        <p class="text-muted">Update job details and status</p>
-    </div>
-</div>
+{% call page_header('Edit Job', job.flat.payment_reference ~ ' — ' ~ job.flat.address) %}
+    <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to jobs</a>
+{% endcall %}
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="mt-card">
+            <div class="mt-card-body">
                 <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="mb-3">
-                        <label for="flat_id" class="form-label">Flat *</label>
-                        <select name="flat_id" id="flat_id" class="form-select" required>
-                            <option value="">Select a flat</option>
-                            {% for flat in flats %}
-                            <option value="{{ flat.id }}" {% if flat.id == job.flat_id %}selected{% endif %}>
-                                {{ flat.payment_reference }} - {{ flat.flat_number or 'No Flat No' }} - {{ flat.address }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Job Title *</label>
-                        <input type="text" name="title" id="title" class="form-control" required 
-                               value="{{ job.title }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="4">{{ job.description or '' }}</textarea>
-                    </div>
-
+                    {{ csrf() }}
+                    {{ form_field('title', 'Title', value=job.title, required=True) }}
+                    {{ form_textarea('description', 'Description', value=job.description or '', rows=4) }}
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="priority" class="form-label">Priority</label>
-                                <select name="priority" id="priority" class="form-select">
-                                    <option value="Low" {% if job.priority == 'Low' %}selected{% endif %}>Low</option>
-                                    <option value="Medium" {% if job.priority == 'Medium' %}selected{% endif %}>Medium</option>
-                                    <option value="High" {% if job.priority == 'High' %}selected{% endif %}>High</option>
-                                    <option value="Urgent" {% if job.priority == 'Urgent' %}selected{% endif %}>Urgent</option>
-                                </select>
-                            </div>
+                        <div class="col-md-6">
+                            {{ form_select('priority', 'Priority', [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Urgent', 'Urgent')], selected=job.priority, required=True) }}
                         </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="Pending" {% if job.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                    <option value="Scheduled" {% if job.status == 'Scheduled' %}selected{% endif %}>Scheduled</option>
-                                    <option value="In Progress" {% if job.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                                    <option value="Completed" {% if job.status == 'Completed' %}selected{% endif %}>Completed</option>
-                                    <option value="Cancelled" {% if job.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="estimated_cost" class="form-label">Estimated Cost</label>
-                                <input type="number" name="estimated_cost" id="estimated_cost" class="form-control" 
-                                       step="0.01" min="0" value="{{ job.estimated_cost or '' }}">
-                            </div>
+                        <div class="col-md-6">
+                            {{ form_select('status', 'Status', [('Pending', 'Pending'), ('Scheduled', 'Scheduled'), ('In Progress', 'In Progress'), ('Completed', 'Completed'), ('Cancelled', 'Cancelled')], selected=job.status, required=True) }}
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea name="notes" id="notes" class="form-control" rows="4">{{ job.notes or '' }}</textarea>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <h6>Job Information</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Reported:</strong> {{ job.reported_date.strftime('%d/%m/%Y') }}</p>
-                                <p class="mb-1"><strong>Scheduled:</strong> 
-                                    {% if job.scheduled_date %}
-                                        {{ job.scheduled_date.strftime('%d/%m/%Y') }}
-                                    {% else %}
-                                        Not scheduled
-                                    {% endif %}
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Completed:</strong> 
-                                    {% if job.completed_date %}
-                                        {{ job.completed_date.strftime('%d/%m/%Y') }}
-                                    {% else %}
-                                        Not completed
-                                    {% endif %}
-                                </p>
-                                <p class="mb-1"><strong>Actual Cost:</strong> 
-                                    {% if job.actual_cost %}
-                                        ${{ "%.2f"|format(job.actual_cost) }}
-                                    {% else %}
-                                        Not set
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                        {% if job.contractor %}
-                        <p class="mb-1"><strong>Assigned Contractor:</strong> {{ job.contractor.name }}</p>
-                        {% endif %}
-                        {% if job.status in ['Pending', 'Scheduled', 'In Progress'] %}
-                        <p class="mb-1">
-                            <strong>Follow-up Status:</strong> 
-                            {% if job.follow_up_count > 0 %}
-                                <span class="badge bg-success">{{ job.follow_up_count }} Follow-up{{ 's' if job.follow_up_count != 1 else '' }} sent</span>
-                                {% if job.follow_up_date %}
-                                    on {{ job.follow_up_date.strftime('%d/%m/%Y') }}
-                                {% endif %}
-                            {% else %}
-                                <span class="badge bg-warning">No follow-ups sent</span>
-                            {% endif %}
-                        </p>
-                        {% endif %}
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('jobs.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Update Job
-                        </button>
+                    {{ form_field('estimated_cost', 'Estimated cost (£)', type='number', step='0.01', min=0, value=job.estimated_cost if job.estimated_cost is not none else '') }}
+                    {{ form_textarea('notes', 'Notes', value=job.notes or '', rows=3) }}
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary">{{ icon('check', 16) }} Save Changes</button>
+                        <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                {% if job.status == 'Pending' %}
-                    <a href="{{ url_for('jobs.schedule', job_id=job.id) }}" class="btn btn-success btn-sm mb-2 w-100">
-                        <i class="fas fa-calendar"></i> Schedule Job
-                    </a>
-                {% elif job.status in ['Scheduled', 'In Progress'] %}
-                    {% if job.follow_up_count == 0 %}
-                    <a href="{{ url_for('jobs.followup', job_id=job.id) }}" class="btn btn-warning btn-sm mb-2 w-100">
-                        <i class="fas fa-envelope"></i> Send Follow-up
-                    </a>
-                    {% endif %}
-                    <a href="{{ url_for('jobs.complete', job_id=job.id) }}" class="btn btn-success btn-sm mb-2 w-100">
-                        <i class="fas fa-check"></i> Mark Complete
-                    </a>
+    <div class="col-lg-4">
+        <div class="mt-card">
+            <div class="mt-card-header"><h2 class="mt-card-title">Job details</h2></div>
+            <div class="mt-card-body">
+                <p class="mb-2"><span class="mt-meta">Status</span><br>{{ status_badge(job.status) }}</p>
+                <p class="mb-2"><span class="mt-meta">Reported</span><br>{{ job.reported_date | ukdate }}</p>
+                {% if job.scheduled_date %}
+                <p class="mb-2"><span class="mt-meta">Scheduled</span><br>{{ job.scheduled_date | ukdate }}</p>
                 {% endif %}
-                
                 {% if job.contractor %}
-                <div class="mt-3">
-                    <h6>Contractor Contact</h6>
-                    <p class="small mb-1"><strong>Name:</strong> {{ job.contractor.name }}</p>
-                    <p class="small mb-1"><strong>Phone:</strong> {{ job.contractor.phone }}</p>
-                    {% if job.contractor.email %}
-                    <p class="small mb-0"><strong>Email:</strong> {{ job.contractor.email }}</p>
-                    {% endif %}
-                </div>
+                <p class="mb-2"><span class="mt-meta">Contractor</span><br>{{ job.contractor.name }}</p>
                 {% endif %}
-                
-                {% if job.follow_up_count > 0 %}
-                <div class="mt-3">
-                    <h6>Follow-up History</h6>
-                    <p class="small mb-1"><strong>Last Sent:</strong> {{ job.follow_up_date.strftime('%d/%m/%Y %H:%M') if job.follow_up_date else 'Never' }}</p>
-                    {% if job.follow_up_notes %}
-                    <p class="small mb-0"><strong>Notes:</strong> {{ job.follow_up_notes }}</p>
-                    {% endif %}
-                </div>
+                {% if job.actual_cost is not none %}
+                <p class="mb-0"><span class="mt-meta">Actual cost</span><br>{{ job.actual_cost | gbp }}</p>
                 {% endif %}
             </div>
         </div>

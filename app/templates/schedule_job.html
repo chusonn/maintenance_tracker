@@ -1,95 +1,64 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, form_textarea, priority_badge, csrf %}
 
 {% block title %}Schedule Job - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1><i class="fas fa-calendar"></i> Schedule Maintenance Job</h1>
-        <p class="text-muted">Assign contractor and schedule the work</p>
-    </div>
-</div>
+{% call page_header('Schedule Job', job.title) %}
+    <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to jobs</a>
+{% endcall %}
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <h5><i class="fas fa-home"></i> {{ job.flat.payment_reference }} - {{ job.flat.flat_number or 'No Flat No' }}</h5>
-                    <p class="mb-1"><strong>Address:</strong> {{ job.flat.address }}</p>
-                    <p class="mb-1"><strong>Job:</strong> {{ job.title }}</p>
-                    <p class="mb-1"><strong>Priority:</strong> 
-                        {% if job.priority == 'Urgent' %}
-                            <span class="badge bg-danger">{{ job.priority }}</span>
-                        {% elif job.priority == 'High' %}
-                            <span class="badge bg-warning">{{ job.priority }}</span>
-                        {% elif job.priority == 'Medium' %}
-                            <span class="badge bg-info">{{ job.priority }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ job.priority }}</span>
-                        {% endif %}
-                    </p>
-                    {% if job.description %}
-                    <p class="mb-0"><strong>Description:</strong> {{ job.description }}</p>
-                    {% endif %}
-                </div>
-
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="mt-card">
+            <div class="mt-card-body">
+                {% if contractors %}
                 <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ csrf() }}
                     <div class="mb-3">
-                        <label for="contractor_id" class="form-label">Assign Contractor *</label>
+                        <label for="contractor_id" class="form-label">Contractor *</label>
                         <select name="contractor_id" id="contractor_id" class="form-select" required>
-                            <option value="">Select a contractor</option>
+                            <option value="">Select a contractor…</option>
                             {% for contractor in contractors %}
-                            <option value="{{ contractor.id }}">
-                                {{ contractor.name }} 
-                                {% if contractor.company %}({{ contractor.company }}){% endif %}
-                                - {{ contractor.specialty }}
+                            <option value="{{ contractor.id }}" {{ 'selected' if job.contractor_id == contractor.id }}>
+                                {{ contractor.name }}{% if contractor.specialty %} · {{ contractor.specialty }}{% endif %}{% if contractor.company %} ({{ contractor.company }}){% endif %}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
-
                     <div class="mb-3">
-                        <label for="scheduled_date" class="form-label">Scheduled Date *</label>
-                        <input type="date" name="scheduled_date" id="scheduled_date" class="form-control" required>
+                        <label for="scheduled_date" class="form-label">Scheduled date *</label>
+                        <input type="date" name="scheduled_date" id="scheduled_date" class="form-control" required
+                               value="{{ job.scheduled_date.isoformat() if job.scheduled_date else '' }}">
                     </div>
-
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes for Contractor</label>
-                        <textarea name="notes" id="notes" class="form-control" rows="4" 
-                                  placeholder="Any special instructions or access information..."></textarea>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('jobs.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-calendar-check"></i> Schedule Job
-                        </button>
+                    {{ form_textarea('notes', 'Notes for the visit', value=job.notes or '', rows=3, placeholder='Access arrangements, tenant availability…') }}
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary">{{ icon('calendar', 16) }} Schedule Job</button>
+                        <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
+                {% else %}
+                <div class="mt-empty">
+                    <div class="mt-empty-icon">{{ icon('users', 22) }}</div>
+                    <div class="mt-empty-title">No contractors available</div>
+                    <p>Add a contractor before scheduling this job.</p>
+                    <a href="{{ url_for('contractors.add') }}" class="btn btn-primary btn-sm">{{ icon('plus', 14) }} Add Contractor</a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-users"></i> Available Contractors</h5>
-            </div>
-            <div class="card-body">
-                {% for contractor in contractors %}
-                <div class="mb-3 pb-3 border-bottom">
-                    <h6 class="mb-1">{{ contractor.name }}</h6>
-                    {% if contractor.company %}
-                    <p class="small text-muted mb-1">{{ contractor.company }}</p>
-                    {% endif %}
-                    <p class="small mb-1"><strong>Specialty:</strong> {{ contractor.specialty }}</p>
-                    <p class="small mb-1"><strong>Phone:</strong> {{ contractor.phone }}</p>
-                    <p class="small mb-0"><strong>Email:</strong> {{ contractor.email }}</p>
-                </div>
-                {% endfor %}
+    <div class="col-lg-4">
+        <div class="mt-card">
+            <div class="mt-card-header"><h2 class="mt-card-title">Job summary</h2></div>
+            <div class="mt-card-body">
+                <p class="mb-2"><span class="mt-meta">Property</span><br>{{ job.flat.payment_reference }} — {{ job.flat.address }}</p>
+                <p class="mb-2"><span class="mt-meta">Priority</span><br>{{ priority_badge(job.priority) }}</p>
+                <p class="mb-2"><span class="mt-meta">Reported</span><br>{{ job.reported_date | ukdate }}</p>
+                {% if job.description %}
+                <p class="mb-0"><span class="mt-meta">Description</span><br>{{ job.description }}</p>
+                {% endif %}
             </div>
         </div>
     </div>

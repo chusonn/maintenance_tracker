@@ -1,147 +1,68 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, empty_state, csrf %}
 
 {% block title %}Contractors - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="fas fa-users"></i> Contractors</h1>
-            <a href="{{ url_for('contractors.add') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New Contractor
-            </a>
-        </div>
+{% call page_header('Contractors', 'Your trades network and their specialties') %}
+    <a href="{{ url_for('contractors.add') }}" class="btn btn-primary">{{ icon('plus', 16) }} Add Contractor</a>
+{% endcall %}
+
+<div class="mt-card">
+    <div class="mt-card-body flush mt-table-wrap">
+        {% if contractors %}
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Specialty</th>
+                    <th>Contact</th>
+                    <th>Active jobs</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contractor in contractors %}
+                {% set active_jobs = contractor.maintenance_jobs | selectattr('is_open') | rejectattr('is_deleted') | list %}
+                <tr>
+                    <td class="primary">{{ contractor.name }}</td>
+                    <td>{{ contractor.company or '—' }}</td>
+                    <td><span class="mt-badge tone-neutral">{{ contractor.specialty or 'General' }}</span></td>
+                    <td>
+                        {% if contractor.email %}<div>{{ contractor.email }}</div>{% endif %}
+                        {% if contractor.phone %}<div class="mt-meta">{{ contractor.phone }}</div>{% endif %}
+                        {% if not contractor.email and not contractor.phone %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if active_jobs %}
+                        <span class="mt-badge tone-warning">{{ active_jobs | length }}</span>
+                        {% else %}
+                        <span class="mt-meta">0</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="mt-row-actions">
+                            <a href="{{ url_for('contractors.edit', contractor_id=contractor.id) }}" class="btn btn-outline-secondary btn-sm" title="Edit">
+                                {{ icon('pencil', 14) }}
+                            </a>
+                            <form method="POST" action="{{ url_for('contractors.delete', contractor_id=contractor.id) }}"
+                                  data-confirm="Move {{ contractor.name }} to the recycle bin? Their history on past jobs is kept.">
+                                {{ csrf() }}
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                    {{ icon('trash', 14) }}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        {{ empty_state('users', 'No contractors yet', 'Build your trades network so jobs can be scheduled.', url_for('contractors.add'), 'Add Contractor') }}
+        {% endif %}
     </div>
 </div>
-
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Name</th>
-                                <th>Company</th>
-                                <th>Specialty</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Active Jobs</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for contractor in contractors %}
-                            <tr>
-                                <td><strong>{{ contractor.name }}</strong></td>
-                                <td>{{ contractor.company or '-' }}</td>
-                                <td><span class="badge bg-info">{{ contractor.specialty }}</span></td>
-                                <td>{{ contractor.email or '-' }}</td>
-                                <td>{{ contractor.phone or '-' }}</td>
-                                <td>
-                                    {% set active_jobs = contractor.maintenance_jobs | selectattr('status', 'in', ['Scheduled', 'In Progress']) | list %}
-                                    <span class="badge bg-primary">{{ active_jobs | length }}</span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="viewContractorDetails('{{ contractor.id }}')">
-                                        <i class="fas fa-eye"></i> View
-                                    </button>
-                                    <a href="{{ url_for('contractors.edit', contractor_id=contractor.id) }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <form method="POST" action="{{ url_for('contractors.delete', contractor_id=contractor.id) }}"
-                                          style="display: inline;"
-                                          onsubmit="return confirm('Move {{ contractor.name }} to the recycle bin? Their history on past jobs is kept.');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% if not contractors %}
-                <div class="text-center py-4">
-                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No contractors have been added yet.</p>
-                    <a href="{{ url_for('contractors.add') }}" class="btn btn-primary">Add Your First Contractor</a>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Contractor Details Modal -->
-<div class="modal fade" id="contractorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Contractor Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="contractorDetails">
-                <!-- Details will be loaded here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function viewContractorDetails(contractorId) {
-    // Find the contractor data from the page
-    const contractorRows = document.querySelectorAll('tbody tr');
-    let contractor = null;
-    
-    contractorRows.forEach(row => {
-        const viewBtn = row.querySelector('button[onclick*="' + contractorId + '"]');
-        if (viewBtn) {
-            const cells = row.querySelectorAll('td');
-            contractor = {
-                id: contractorId,
-                name: cells[0].textContent.trim(),
-                company: cells[1].textContent.trim() === '-' ? null : cells[1].textContent.trim(),
-                specialty: cells[2].textContent.trim(),
-                email: cells[3].textContent.trim() === '-' ? null : cells[3].textContent.trim(),
-                phone: cells[4].textContent.trim() === '-' ? null : cells[4].textContent.trim()
-            };
-        }
-    });
-    
-    if (contractor) {
-        const details = `
-            <div class="row">
-                <div class="col-md-6"><strong>Name:</strong></div>
-                <div class="col-md-6">${contractor.name}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-6"><strong>Company:</strong></div>
-                <div class="col-md-6">${contractor.company || '-'}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-6"><strong>Specialty:</strong></div>
-                <div class="col-md-6">${contractor.specialty}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-6"><strong>Email:</strong></div>
-                <div class="col-md-6">${contractor.email || '-'}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-6"><strong>Phone:</strong></div>
-                <div class="col-md-6">${contractor.phone || '-'}</div>
-            </div>
-        `;
-        
-        document.getElementById('contractorDetails').innerHTML = details;
-        new bootstrap.Modal(document.getElementById('contractorModal')).show();
-    }
-}
-</script>
 {% endblock %}

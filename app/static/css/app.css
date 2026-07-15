@@ -1,0 +1,668 @@
+/* ============================================================
+   Maintenance Tracker design system
+   Token-based: change the variables, the whole app follows.
+   Bootstrap 5.3 supplies grid + JS behaviors only; visual
+   styling lives here.
+   ============================================================ */
+
+:root {
+  /* --- Palette: neutrals --- */
+  --mt-gray-25: #fcfcfd;
+  --mt-gray-50: #f9fafb;
+  --mt-gray-100: #f2f4f7;
+  --mt-gray-200: #e4e7ec;
+  --mt-gray-300: #d0d5dd;
+  --mt-gray-400: #98a2b3;
+  --mt-gray-500: #667085;
+  --mt-gray-600: #475467;
+  --mt-gray-700: #344054;
+  --mt-gray-800: #1d2939;
+  --mt-gray-900: #101828;
+
+  /* --- Palette: accent (indigo) --- */
+  --mt-accent-50: #eef4ff;
+  --mt-accent-100: #e0eaff;
+  --mt-accent-500: #6172f3;
+  --mt-accent-600: #444ce7;
+  --mt-accent-700: #3538cd;
+
+  /* --- Palette: semantic --- */
+  --mt-success-50: #ecfdf3;
+  --mt-success-600: #079455;
+  --mt-success-700: #067647;
+  --mt-info-50: #eff8ff;
+  --mt-info-600: #1570ef;
+  --mt-info-700: #175cd3;
+  --mt-warning-50: #fffaeb;
+  --mt-warning-600: #dc6803;
+  --mt-warning-700: #b54708;
+  --mt-danger-50: #fef3f2;
+  --mt-danger-600: #d92d20;
+  --mt-danger-700: #b42318;
+  --mt-purple-50: #f4f3ff;
+  --mt-purple-600: #6938ef;
+
+  /* --- Semantic aliases --- */
+  --mt-bg: var(--mt-gray-50);
+  --mt-surface: #ffffff;
+  --mt-border: var(--mt-gray-200);
+  --mt-text: var(--mt-gray-900);
+  --mt-text-secondary: var(--mt-gray-600);
+  --mt-text-muted: var(--mt-gray-500);
+
+  /* --- Type scale --- */
+  --mt-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --mt-text-xs: 0.75rem;
+  --mt-text-sm: 0.875rem;
+  --mt-text-md: 1rem;
+  --mt-text-lg: 1.125rem;
+  --mt-text-xl: 1.5rem;
+  --mt-text-2xl: 1.875rem;
+
+  /* --- Space / radius / shadow --- */
+  --mt-space-1: 0.25rem;
+  --mt-space-2: 0.5rem;
+  --mt-space-3: 0.75rem;
+  --mt-space-4: 1rem;
+  --mt-space-5: 1.5rem;
+  --mt-space-6: 2rem;
+  --mt-radius-sm: 6px;
+  --mt-radius-md: 8px;
+  --mt-radius-lg: 12px;
+  --mt-shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --mt-shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --mt-shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+
+  /* --- Layout --- */
+  --mt-sidebar-width: 248px;
+  --mt-topbar-height: 60px;
+}
+
+/* ============ Base ============ */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--mt-font);
+  font-size: var(--mt-text-sm);
+  color: var(--mt-text);
+  background: var(--mt-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--mt-text);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--mt-accent-600);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--mt-accent-700);
+}
+
+/* ============ App shell ============ */
+
+.mt-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.mt-sidebar {
+  width: var(--mt-sidebar-width);
+  flex-shrink: 0;
+  background: var(--mt-surface);
+  border-right: 1px solid var(--mt-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.mt-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-5) var(--mt-space-5) var(--mt-space-4);
+  font-size: var(--mt-text-md);
+  font-weight: 700;
+  color: var(--mt-text);
+}
+
+.mt-sidebar-brand .mt-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--mt-radius-md);
+  background: var(--mt-accent-600);
+  color: #fff;
+}
+
+.mt-nav {
+  padding: var(--mt-space-2) var(--mt-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mt-nav-label {
+  padding: var(--mt-space-4) var(--mt-space-3) var(--mt-space-1);
+  font-size: var(--mt-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mt-text-muted);
+}
+
+.mt-nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-2) var(--mt-space-3);
+  border-radius: var(--mt-radius-sm);
+  color: var(--mt-text-secondary);
+  font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.mt-nav-link:hover {
+  background: var(--mt-gray-100);
+  color: var(--mt-text);
+}
+
+.mt-nav-link.active {
+  background: var(--mt-accent-50);
+  color: var(--mt-accent-700);
+}
+
+.mt-nav-link svg {
+  flex-shrink: 0;
+}
+
+.mt-sidebar-footer {
+  margin-top: auto;
+  padding: var(--mt-space-4) var(--mt-space-5);
+  border-top: 1px solid var(--mt-border);
+  font-size: var(--mt-text-xs);
+  color: var(--mt-text-muted);
+}
+
+.mt-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mt-topbar {
+  height: var(--mt-topbar-height);
+  background: var(--mt-surface);
+  border-bottom: 1px solid var(--mt-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--mt-space-6);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.mt-content {
+  padding: var(--mt-space-6);
+  max-width: 1280px;
+  width: 100%;
+}
+
+/* Mobile: collapsible sidebar */
+@media (max-width: 991.98px) {
+  .mt-sidebar {
+    position: fixed;
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .mt-sidebar.open {
+    transform: translateX(0);
+    box-shadow: var(--mt-shadow-md);
+  }
+  .mt-content {
+    padding: var(--mt-space-4);
+  }
+  .mt-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.4);
+    z-index: 1040;
+  }
+  .mt-backdrop.show {
+    display: block;
+  }
+}
+
+/* ============ Page header ============ */
+
+.mt-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mt-space-4);
+  margin-bottom: var(--mt-space-5);
+  flex-wrap: wrap;
+}
+
+.mt-page-title {
+  font-size: var(--mt-text-xl);
+  margin: 0;
+}
+
+.mt-page-subtitle {
+  color: var(--mt-text-muted);
+  margin: var(--mt-space-1) 0 0;
+  font-size: var(--mt-text-sm);
+}
+
+.mt-page-actions {
+  display: flex;
+  gap: var(--mt-space-2);
+  flex-wrap: wrap;
+}
+
+/* ============ Cards ============ */
+
+.mt-card {
+  background: var(--mt-surface);
+  border: 1px solid var(--mt-border);
+  border-radius: var(--mt-radius-lg);
+  box-shadow: var(--mt-shadow-xs);
+}
+
+.mt-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-4) var(--mt-space-5);
+  border-bottom: 1px solid var(--mt-border);
+}
+
+.mt-card-title {
+  font-size: var(--mt-text-md);
+  font-weight: 600;
+  margin: 0;
+}
+
+.mt-card-body {
+  padding: var(--mt-space-5);
+}
+
+.mt-card-body.flush {
+  padding: 0;
+}
+
+/* ============ Stat cards ============ */
+
+.mt-stat {
+  background: var(--mt-surface);
+  border: 1px solid var(--mt-border);
+  border-radius: var(--mt-radius-lg);
+  box-shadow: var(--mt-shadow-xs);
+  padding: var(--mt-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mt-space-2);
+  height: 100%;
+}
+
+.mt-stat-label {
+  font-size: var(--mt-text-sm);
+  font-weight: 500;
+  color: var(--mt-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mt-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--mt-radius-md);
+}
+
+.mt-stat-value {
+  font-size: var(--mt-text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.mt-stat-icon.tone-accent  { background: var(--mt-accent-50);  color: var(--mt-accent-600); }
+.mt-stat-icon.tone-success { background: var(--mt-success-50); color: var(--mt-success-600); }
+.mt-stat-icon.tone-info    { background: var(--mt-info-50);    color: var(--mt-info-600); }
+.mt-stat-icon.tone-warning { background: var(--mt-warning-50); color: var(--mt-warning-600); }
+.mt-stat-icon.tone-danger  { background: var(--mt-danger-50);  color: var(--mt-danger-600); }
+.mt-stat-icon.tone-neutral { background: var(--mt-gray-100);   color: var(--mt-gray-600); }
+
+/* ============ Badges ============ */
+
+.mt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-1);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--mt-text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* status */
+.mt-badge.status-pending     { background: var(--mt-gray-100);    color: var(--mt-gray-700);    border-color: var(--mt-gray-200); }
+.mt-badge.status-scheduled   { background: var(--mt-purple-50);   color: var(--mt-purple-600); }
+.mt-badge.status-in-progress { background: var(--mt-info-50);     color: var(--mt-info-700); }
+.mt-badge.status-completed   { background: var(--mt-success-50);  color: var(--mt-success-700); }
+.mt-badge.status-cancelled   { background: var(--mt-gray-100);    color: var(--mt-gray-500);    text-decoration: line-through; }
+
+/* priority */
+.mt-badge.priority-low    { background: var(--mt-gray-100);    color: var(--mt-gray-600); }
+.mt-badge.priority-medium { background: var(--mt-info-50);     color: var(--mt-info-700); }
+.mt-badge.priority-high   { background: var(--mt-warning-50);  color: var(--mt-warning-700); }
+.mt-badge.priority-urgent { background: var(--mt-danger-50);   color: var(--mt-danger-700); }
+
+/* generic tones */
+.mt-badge.tone-success { background: var(--mt-success-50); color: var(--mt-success-700); }
+.mt-badge.tone-warning { background: var(--mt-warning-50); color: var(--mt-warning-700); }
+.mt-badge.tone-neutral { background: var(--mt-gray-100);   color: var(--mt-gray-600); }
+
+/* ============ Buttons (override Bootstrap) ============ */
+
+.btn {
+  font-weight: 500;
+  font-size: var(--mt-text-sm);
+  border-radius: var(--mt-radius-md);
+  padding: 0.5rem 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-2);
+  box-shadow: var(--mt-shadow-xs);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--mt-accent-500);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--mt-accent-600);
+  --bs-btn-border-color: var(--mt-accent-600);
+  --bs-btn-hover-bg: var(--mt-accent-700);
+  --bs-btn-hover-border-color: var(--mt-accent-700);
+  --bs-btn-active-bg: var(--mt-accent-700);
+  --bs-btn-active-border-color: var(--mt-accent-700);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--mt-gray-700);
+  --bs-btn-border-color: var(--mt-gray-300);
+  --bs-btn-hover-bg: var(--mt-gray-50);
+  --bs-btn-hover-color: var(--mt-gray-800);
+  --bs-btn-hover-border-color: var(--mt-gray-300);
+  --bs-btn-active-bg: var(--mt-gray-100);
+  --bs-btn-active-color: var(--mt-gray-800);
+  --bs-btn-active-border-color: var(--mt-gray-300);
+  background: var(--mt-surface);
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--mt-danger-600);
+  --bs-btn-border-color: var(--mt-danger-600);
+  --bs-btn-hover-bg: var(--mt-danger-700);
+  --bs-btn-hover-border-color: var(--mt-danger-700);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--mt-danger-600);
+  --bs-btn-border-color: var(--mt-gray-300);
+  --bs-btn-hover-bg: var(--mt-danger-50);
+  --bs-btn-hover-color: var(--mt-danger-700);
+  --bs-btn-hover-border-color: var(--mt-danger-300, var(--mt-gray-300));
+  background: var(--mt-surface);
+}
+
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: var(--mt-text-xs);
+  border-radius: var(--mt-radius-sm);
+}
+
+/* ============ Tables ============ */
+
+.mt-table {
+  width: 100%;
+  font-size: var(--mt-text-sm);
+  border-collapse: collapse;
+}
+
+.mt-table th {
+  text-align: left;
+  font-size: var(--mt-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mt-text-muted);
+  padding: var(--mt-space-3) var(--mt-space-5);
+  border-bottom: 1px solid var(--mt-border);
+  background: var(--mt-gray-25);
+  white-space: nowrap;
+}
+
+.mt-table td {
+  padding: var(--mt-space-3) var(--mt-space-5);
+  border-bottom: 1px solid var(--mt-gray-100);
+  vertical-align: middle;
+  color: var(--mt-text-secondary);
+}
+
+.mt-table td.primary {
+  color: var(--mt-text);
+  font-weight: 500;
+}
+
+.mt-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mt-table tbody tr:hover {
+  background: var(--mt-gray-25);
+}
+
+.mt-table .mt-row-actions {
+  display: flex;
+  gap: var(--mt-space-1);
+  justify-content: flex-end;
+}
+
+.mt-table-wrap {
+  overflow-x: auto;
+}
+
+/* ============ Forms ============ */
+
+.form-label {
+  font-weight: 500;
+  font-size: var(--mt-text-sm);
+  color: var(--mt-gray-700);
+  margin-bottom: var(--mt-space-1);
+}
+
+.form-control,
+.form-select {
+  font-size: var(--mt-text-sm);
+  border-color: var(--mt-gray-300);
+  border-radius: var(--mt-radius-md);
+  padding: 0.5rem 0.75rem;
+  color: var(--mt-text);
+  box-shadow: var(--mt-shadow-xs);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--mt-accent-500);
+  box-shadow: 0 0 0 4px var(--mt-accent-100);
+}
+
+.form-text {
+  color: var(--mt-text-muted);
+  font-size: var(--mt-text-xs);
+}
+
+/* ============ Toasts (flash messages) ============ */
+
+.mt-toast-region {
+  position: fixed;
+  top: calc(var(--mt-topbar-height) + var(--mt-space-4));
+  right: var(--mt-space-5);
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mt-space-2);
+  max-width: 380px;
+}
+
+.mt-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mt-space-3);
+  background: var(--mt-surface);
+  border: 1px solid var(--mt-border);
+  border-radius: var(--mt-radius-md);
+  box-shadow: var(--mt-shadow-md);
+  padding: var(--mt-space-3) var(--mt-space-4);
+  font-size: var(--mt-text-sm);
+  color: var(--mt-text-secondary);
+  animation: mt-toast-in 0.18s ease;
+}
+
+.mt-toast .mt-toast-accent {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.mt-toast.success .mt-toast-accent { background: var(--mt-success-600); }
+.mt-toast.warning .mt-toast-accent { background: var(--mt-warning-600); }
+.mt-toast.danger .mt-toast-accent,
+.mt-toast.error .mt-toast-accent   { background: var(--mt-danger-600); }
+.mt-toast.info .mt-toast-accent    { background: var(--mt-info-600); }
+
+.mt-toast .btn-close {
+  margin-left: auto;
+  font-size: 0.6rem;
+}
+
+@keyframes mt-toast-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ Empty states ============ */
+
+.mt-empty {
+  text-align: center;
+  padding: var(--mt-space-6) var(--mt-space-5);
+  color: var(--mt-text-muted);
+}
+
+.mt-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--mt-gray-100);
+  color: var(--mt-gray-500);
+  margin-bottom: var(--mt-space-3);
+}
+
+.mt-empty-title {
+  font-weight: 600;
+  color: var(--mt-text);
+  margin-bottom: var(--mt-space-1);
+}
+
+.mt-empty p {
+  font-size: var(--mt-text-sm);
+  margin-bottom: var(--mt-space-4);
+}
+
+/* ============ Pagination ============ */
+
+.mt-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--mt-space-3) var(--mt-space-5);
+  border-top: 1px solid var(--mt-border);
+  font-size: var(--mt-text-sm);
+  color: var(--mt-text-muted);
+}
+
+.mt-pagination .pagination {
+  margin: 0;
+}
+
+.mt-pagination .page-link {
+  border-color: var(--mt-gray-300);
+  color: var(--mt-gray-700);
+  font-size: var(--mt-text-sm);
+}
+
+.mt-pagination .page-item.active .page-link {
+  background: var(--mt-accent-600);
+  border-color: var(--mt-accent-600);
+}
+
+/* ============ Misc ============ */
+
+.mt-divider {
+  border: 0;
+  border-top: 1px solid var(--mt-border);
+  margin: var(--mt-space-5) 0;
+}
+
+.text-muted {
+  color: var(--mt-text-muted) !important;
+}
+
+.mt-meta {
+  font-size: var(--mt-text-xs);
+  color: var(--mt-text-muted);
+}
+
+.mt-filter-bar {
+  display: flex;
+  gap: var(--mt-space-3);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.mt-filter-bar .form-label {
+  font-size: var(--mt-text-xs);
+}

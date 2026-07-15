@@ -1,0 +1,133 @@
+{% from "_icons.html" import icon %}
+
+{# ---------- Page header ---------- #}
+{% macro page_header(title, subtitle=None) %}
+<div class="mt-page-header">
+    <div>
+        <h1 class="mt-page-title">{{ title }}</h1>
+        {% if subtitle %}<p class="mt-page-subtitle">{{ subtitle }}</p>{% endif %}
+    </div>
+    {% if caller is defined and caller %}
+    <div class="mt-page-actions">{{ caller() }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# ---------- Stat card ---------- #}
+{% macro stat_card(label, value, icon_name, tone='neutral') %}
+<div class="mt-stat">
+    <div class="mt-stat-label">
+        <span>{{ label }}</span>
+        <span class="mt-stat-icon tone-{{ tone }}">{{ icon(icon_name, 18) }}</span>
+    </div>
+    <div class="mt-stat-value">{{ value }}</div>
+</div>
+{% endmacro %}
+
+{# ---------- Status / priority badges ---------- #}
+{% macro status_badge(status) %}
+<span class="mt-badge status-{{ status | lower | replace(' ', '-') }}">{{ status }}</span>
+{% endmacro %}
+
+{% macro priority_badge(priority) %}
+<span class="mt-badge priority-{{ priority | lower }}">{{ priority }}</span>
+{% endmacro %}
+
+{% macro followup_badge(job) %}
+{% if job.status in ['Pending', 'Scheduled', 'In Progress'] %}
+    {% if job.follow_up_count > 0 %}
+        <span class="mt-badge tone-success">{{ job.follow_up_count }} sent</span>
+    {% else %}
+        <span class="mt-badge tone-warning">Needed</span>
+    {% endif %}
+{% else %}
+    <span class="mt-meta">—</span>
+{% endif %}
+{% endmacro %}
+
+{# ---------- Empty state ---------- #}
+{% macro empty_state(icon_name, title, message, action_url=None, action_label=None) %}
+<div class="mt-empty">
+    <div class="mt-empty-icon">{{ icon(icon_name, 22) }}</div>
+    <div class="mt-empty-title">{{ title }}</div>
+    <p>{{ message }}</p>
+    {% if action_url %}
+    <a href="{{ action_url }}" class="btn btn-primary btn-sm">{{ icon('plus', 14) }} {{ action_label }}</a>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# ---------- Form field (text/number/date/email) ---------- #}
+{% macro form_field(name, label, type='text', value='', required=False, placeholder='', help='', step=None, min=None, max=None) %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">{{ label }}{% if required %} *{% endif %}</label>
+    <input type="{{ type }}" name="{{ name }}" id="{{ name }}" class="form-control"
+           value="{{ value if value is not none else '' }}"
+           {% if required %}required{% endif %}
+           {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+           {% if step %}step="{{ step }}"{% endif %}
+           {% if min is not none %}min="{{ min }}"{% endif %}
+           {% if max is not none %}max="{{ max }}"{% endif %}>
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# ---------- Textarea ---------- #}
+{% macro form_textarea(name, label, value='', rows=3, required=False, placeholder='', help='') %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">{{ label }}{% if required %} *{% endif %}</label>
+    <textarea name="{{ name }}" id="{{ name }}" class="form-control" rows="{{ rows }}"
+              {% if required %}required{% endif %}
+              {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}>{{ value if value is not none else '' }}</textarea>
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# ---------- Select ---------- #}
+{% macro form_select(name, label, options, selected=None, required=False, placeholder=None, help='') %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">{{ label }}{% if required %} *{% endif %}</label>
+    <select name="{{ name }}" id="{{ name }}" class="form-select" {% if required %}required{% endif %}>
+        {% if placeholder %}<option value="">{{ placeholder }}</option>{% endif %}
+        {% for opt_value, opt_label in options %}
+        <option value="{{ opt_value }}" {{ 'selected' if opt_value|string == selected|string }}>{{ opt_label }}</option>
+        {% endfor %}
+    </select>
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{# ---------- CSRF token ---------- #}
+{% macro csrf() %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endmacro %}
+
+{# ---------- Pagination footer ---------- #}
+{% macro pagination(page_obj, endpoint) %}
+{% if page_obj.pages > 1 %}
+<div class="mt-pagination">
+    <span>
+        Showing {{ page_obj.first }}–{{ page_obj.last }} of {{ page_obj.total }}
+    </span>
+    <nav>
+        <ul class="pagination pagination-sm">
+            <li class="page-item {{ 'disabled' if not page_obj.has_prev }}">
+                <a class="page-link" href="{{ url_with_page(page_obj.prev_num) if page_obj.has_prev else '#' }}">{{ icon('chevron-left', 14) }}</a>
+            </li>
+            {% for num in page_obj.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if num %}
+                <li class="page-item {{ 'active' if num == page_obj.page }}">
+                    <a class="page-link" href="{{ url_with_page(num) }}">{{ num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if not page_obj.has_next }}">
+                <a class="page-link" href="{{ url_with_page(page_obj.next_num) if page_obj.has_next else '#' }}">{{ icon('chevron-right', 14) }}</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% endmacro %}

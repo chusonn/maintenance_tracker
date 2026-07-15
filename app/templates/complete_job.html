@@ -1,179 +1,56 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, form_field, form_textarea, priority_badge, csrf %}
 
 {% block title %}Complete Job - Maintenance Tracker{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1><i class="fas fa-check-circle"></i> Complete Maintenance Job</h1>
-        <p class="text-muted">Mark this job as completed and record final details</p>
-    </div>
-</div>
+{% call page_header('Complete Job', job.title) %}
+    <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to jobs</a>
+{% endcall %}
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <div class="alert alert-success">
-                    <h5><i class="fas fa-home"></i> {{ job.flat.payment_reference }} - {{ job.flat.flat_number or 'No Flat No' }}</h5>
-                    <p class="mb-1"><strong>Address:</strong> {{ job.flat.address }}</p>
-                    <p class="mb-1"><strong>Job:</strong> {{ job.title }}</p>
-                    <p class="mb-1"><strong>Contractor:</strong> 
-                        {% if job.contractor %}
-                            {{ job.contractor.name }} {% if job.contractor.company %}({{ job.contractor.company }}){% endif %}
-                        {% else %}
-                            Not assigned
-                        {% endif %}
-                    </p>
-                    <p class="mb-1"><strong>Scheduled:</strong> 
-                        {% if job.scheduled_date %}
-                            {{ job.scheduled_date.strftime('%Y-%m-%d') if job.scheduled_date else 'Not scheduled' }}
-                        {% else %}
-                            Not scheduled
-                        {% endif %}
-                    </p>
-                    {% if job.description %}
-                    <p class="mb-0"><strong>Description:</strong> {{ job.description }}</p>
-                    {% endif %}
-                </div>
-
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="mt-card">
+            <div class="mt-card-body">
                 <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ csrf() }}
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="actual_cost" class="form-label">Actual Cost</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" name="actual_cost" id="actual_cost" class="form-control" 
-                                           step="0.01" min="0" placeholder="0.00">
-                                </div>
-                                <div class="form-text">Enter the final cost of the work completed</div>
-                            </div>
+                            {{ form_field('completed_date', 'Completion date', type='date', value=today_date, help='Defaults to today if left as is') }}
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="completed_date" class="form-label">Completion Date</label>
-                                <input type="date" name="completed_date" id="completed_date" class="form-control"
-                                       value="{{ today_date }}">
-                                <div class="form-text">Job will be marked as completed on this date</div>
-                            </div>
+                            {{ form_field('actual_cost', 'Actual cost (£)', type='number', step='0.01', min=0,
+                                          value=job.actual_cost if job.actual_cost is not none else '',
+                                          help=('Estimated: ' ~ '£%.2f' | format(job.estimated_cost)) if job.estimated_cost is not none else '') }}
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Completion Notes</label>
-                        <textarea name="notes" id="notes" class="form-control" rows="4" 
-                                  placeholder="Add any notes about the work completed, issues encountered, or follow-up needed...">{{ job.notes or '' }}</textarea>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle"></i> Job Completion Checklist</h6>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="work_completed" required>
-                            <label class="form-check-label" for="work_completed">
-                                Work has been completed satisfactorily
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="tenant_notified">
-                            <label class="form-check-label" for="tenant_notified">
-                                Tenant has been notified of completion
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="payment_arranged">
-                            <label class="form-check-label" for="payment_arranged">
-                                Payment arrangements have been made with contractor
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('jobs.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Mark as Completed
-                        </button>
+                    {{ form_textarea('notes', 'Completion notes', value=job.notes or '', rows=4, placeholder='What was done, parts used, anything the landlord should know…') }}
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary">{{ icon('check-circle', 16) }} Mark as Completed</button>
+                        <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Cost Comparison</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h6>Estimated Cost</h6>
-                    <h4 class="text-info">
-                        {% if job.estimated_cost %}
-                            ${{ "%.2f"|format(job.estimated_cost) }}
-                        {% else %}
-                            Not set
-                        {% endif %}
-                    </h4>
-                </div>
-                <div class="mb-3">
-                    <h6>Actual Cost</h6>
-                    <h4 class="text-success" id="actual_cost_display">
-                        $0.00
-                    </h4>
-                </div>
-                <div class="mb-3">
-                    <h6>Difference</h6>
-                    <h4 id="cost_difference" class="text-muted">
-                        $0.00
-                    </h4>
-                </div>
-            </div>
-        </div>
-
-        {% if job.contractor %}
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-user"></i> Contractor Info</h5>
-            </div>
-            <div class="card-body">
-                <p class="mb-1"><strong>Name:</strong> {{ job.contractor.name }}</p>
-                {% if job.contractor.company %}
-                <p class="mb-1"><strong>Company:</strong> {{ job.contractor.company }}</p>
+    <div class="col-lg-4">
+        <div class="mt-card">
+            <div class="mt-card-header"><h2 class="mt-card-title">Job summary</h2></div>
+            <div class="mt-card-body">
+                <p class="mb-2"><span class="mt-meta">Property</span><br>{{ job.flat.payment_reference }} — {{ job.flat.address }}</p>
+                <p class="mb-2"><span class="mt-meta">Priority</span><br>{{ priority_badge(job.priority) }}</p>
+                {% if job.contractor %}
+                <p class="mb-2"><span class="mt-meta">Contractor</span><br>{{ job.contractor.name }}</p>
                 {% endif %}
-                <p class="mb-1"><strong>Specialty:</strong> {{ job.contractor.specialty }}</p>
-                <p class="mb-1"><strong>Phone:</strong> {{ job.contractor.phone }}</p>
-                {% if job.contractor.email %}
-                <p class="mb-0"><strong>Email:</strong> {{ job.contractor.email }}</p>
+                {% if job.scheduled_date %}
+                <p class="mb-2"><span class="mt-meta">Scheduled</span><br>{{ job.scheduled_date | ukdate }}</p>
+                {% endif %}
+                {% if job.estimated_cost is not none %}
+                <p class="mb-0"><span class="mt-meta">Estimated cost</span><br>{{ job.estimated_cost | gbp }}</p>
                 {% endif %}
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
-
-<script>
-document.getElementById('actual_cost').addEventListener('input', function() {
-    const actualCost = parseFloat(this.value) || 0;
-    const estimatedCost = parseFloat('{{ job.estimated_cost or 0 }}');
-    const difference = actualCost - estimatedCost;
-    
-    document.getElementById('actual_cost_display').textContent = '$' + actualCost.toFixed(2);
-    
-    const differenceElement = document.getElementById('cost_difference');
-    differenceElement.textContent = '$' + difference.toFixed(2);
-    
-    if (difference > 0) {
-        differenceElement.className = 'text-danger';
-        differenceElement.textContent = '+$' + difference.toFixed(2);
-    } else if (difference < 0) {
-        differenceElement.className = 'text-success';
-        differenceElement.textContent = '-$' + Math.abs(difference).toFixed(2);
-    } else {
-        differenceElement.className = 'text-muted';
-        differenceElement.textContent = '$0.00';
-    }
-});
-</script>
 {% endblock %}

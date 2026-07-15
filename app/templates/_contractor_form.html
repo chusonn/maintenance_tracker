@@ -1,0 +1,34 @@
+{# Shared field set for add/edit contractor. `contractor` may be None. #}
+{% from "_components.html" import form_field, form_select %}
+
+{% set SPECIALTIES = ['Plumbing', 'Electrical', 'HVAC', 'Carpentry', 'Painting',
+                      'Appliance Repair', 'General Maintenance', 'Roofing',
+                      'Pest Control', 'Landscaping', 'Other'] %}
+
+{% macro contractor_fields(contractor=None) %}
+<div class="row">
+    <div class="col-md-6">
+        {{ form_field('name', 'Contractor name', value=contractor.name if contractor else '', required=True, placeholder='e.g. Dave Thompson') }}
+    </div>
+    <div class="col-md-6">
+        {{ form_field('company', 'Company', value=(contractor.company or '') if contractor else '', placeholder='e.g. Thompson Plumbing Ltd') }}
+    </div>
+</div>
+<div class="mb-3">
+    <label for="specialty" class="form-label">Specialty *</label>
+    <select name="specialty" id="specialty" class="form-select" required>
+        <option value="">Select specialty</option>
+        {% for s in SPECIALTIES %}
+        <option value="{{ s }}" {{ 'selected' if contractor and contractor.specialty == s }}>{{ s }}</option>
+        {% endfor %}
+    </select>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        {{ form_field('email', 'Email', type='email', value=(contractor.email or '') if contractor else '', placeholder='name@company.co.uk') }}
+    </div>
+    <div class="col-md-6">
+        {{ form_field('phone', 'Phone', value=(contractor.phone or '') if contractor else '', placeholder='07…') }}
+    </div>
+</div>
+{% endmacro %}

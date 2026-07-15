@@ -1,0 +1,53 @@
+{# Shared field set for add_flat / edit_flat. `flat` may be None (add). #}
+{% from "_components.html" import form_field, form_textarea %}
+
+{% macro flat_fields(flat=None) %}
+<div class="row">
+    <div class="col-md-6">
+        {{ form_field('payment_reference', 'Payment reference', value=flat.payment_reference if flat else '', required=True,
+                      placeholder='e.g. PROP-2041', help='Unique identifier used for imports and rent') }}
+    </div>
+    <div class="col-md-6">
+        {{ form_field('flat_number', 'Flat number', value=flat.flat_number if flat else '', required=True, placeholder='e.g. 12B') }}
+    </div>
+</div>
+{{ form_textarea('address', 'Address', value=flat.address if flat else '', rows=2, required=True) }}
+<div class="row">
+    <div class="col-md-4">
+        {{ form_field('postcode', 'Postcode', value=(flat.postcode or '') if flat else '', placeholder='SW1A 1AA') }}
+    </div>
+    <div class="col-md-8">
+        {{ form_field('landlord', 'Landlord', value=(flat.landlord or '') if flat else '') }}
+    </div>
+</div>
+<hr class="mt-divider">
+<div class="row">
+    <div class="col-md-6">
+        {{ form_field('tenant_name', 'Tenant name', value=(flat.tenant_name or '') if flat else '') }}
+    </div>
+    <div class="col-md-6">
+        {{ form_field('tenant_contact_details', 'Tenant contact details', value=(flat.tenant_contact_details or '') if flat else '', placeholder='Phone / email') }}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        {{ form_field('rent_amount', 'Rent (£/month)', type='number', step='0.01', min=0,
+                      value=flat.rent_amount if flat and flat.rent_amount is not none else '') }}
+    </div>
+    <div class="col-md-4">
+        {{ form_field('rent_due_date', 'Rent due day', type='number', min=1, max=31,
+                      value=flat.rent_due_date if flat and flat.rent_due_date is not none else '',
+                      help='Day of the month (1–31)') }}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        {{ form_field('tenancy_start_date', 'Tenancy start', type='date',
+                      value=flat.tenancy_start_date.isoformat() if flat and flat.tenancy_start_date else '') }}
+    </div>
+    <div class="col-md-6">
+        {{ form_field('tenancy_end_date', 'Tenancy end', type='date',
+                      value=flat.tenancy_end_date.isoformat() if flat and flat.tenancy_end_date else '') }}
+    </div>
+</div>
+{% endmacro %}
