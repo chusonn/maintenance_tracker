@@ -11,13 +11,22 @@ def create_app(config: type[Config] = Config) -> Flask:
     db.init_app(app)
     csrf.init_app(app)
 
-    from .blueprints import analytics, contractors, dashboard, flats, jobs, recycle
+    from .blueprints import (
+        analytics,
+        contractors,
+        dashboard,
+        flats,
+        jobs,
+        message_templates,
+        recycle,
+    )
 
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(analytics.bp)
     app.register_blueprint(jobs.bp)
     app.register_blueprint(flats.bp)
     app.register_blueprint(contractors.bp)
+    app.register_blueprint(message_templates.bp)
     app.register_blueprint(recycle.bp)
 
     from . import cli, seed

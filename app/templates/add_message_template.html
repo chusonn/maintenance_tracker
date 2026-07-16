@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, csrf %}
+{% from "_message_template_form.html" import template_fields, placeholder_help %}
+
+{% block title %}Add Email Template - Maintenance Tracker{% endblock %}
+
+{% block content %}
+{% call page_header('Add Email Template', 'A reusable follow-up message preset') %}
+    <a href="{{ url_for('message_templates.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to templates</a>
+{% endcall %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="mt-card">
+            <div class="mt-card-body">
+                <form method="POST">
+                    {{ csrf() }}
+                    {{ template_fields() }}
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary">{{ icon('plus', 16) }} Add Template</button>
+                        <a href="{{ url_for('message_templates.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        {{ placeholder_help(placeholders) }}
+    </div>
+</div>
+{% endblock %}

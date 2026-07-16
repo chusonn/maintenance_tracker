@@ -60,7 +60,10 @@
 <div class="mt-card mb-4">
     <div class="mt-card-header">
         <h2 class="mt-card-title">Jobs needing follow-up</h2>
-        <span class="mt-badge tone-warning">{{ follow_up_needed }} waiting</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="mt-badge tone-warning">{{ follow_up_needed }} waiting</span>
+            <a href="{{ url_for('jobs.due_followups') }}" class="btn btn-outline-secondary btn-sm">View due queue</a>
+        </div>
     </div>
     <div class="mt-card-body flush mt-table-wrap">
         <table class="mt-table">

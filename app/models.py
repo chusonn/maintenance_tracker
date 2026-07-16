@@ -79,6 +79,19 @@ class Contractor(SoftDeleteMixin, db.Model):
     maintenance_jobs: Mapped[list[MaintenanceJob]] = relationship(back_populates="contractor")
 
 
+class MessageTemplate(db.Model):
+    """Reusable follow-up email preset. Plain hard-delete (user config,
+    not business data — the recycle bin stays for the three main models).
+    Subject/body may contain {placeholder} tokens; see services/followup.py."""
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    subject: Mapped[str] = mapped_column(String(200))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
 class MaintenanceJob(SoftDeleteMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     flat_id: Mapped[int] = mapped_column(ForeignKey("flat.id"))

@@ -6,6 +6,7 @@
 
 {% block content %}
 {% call page_header('Maintenance Jobs', 'Manage and track all maintenance requests') %}
+    <a href="{{ url_for('jobs.due_followups') }}" class="btn btn-outline-secondary">{{ icon('mail', 16) }} Due follow-ups</a>
     <a href="{{ url_for('jobs.export') }}" class="btn btn-outline-secondary">{{ icon('download', 16) }} Export</a>
     <a href="{{ url_for('jobs.add') }}" class="btn btn-primary">{{ icon('plus', 16) }} New Job</a>
 {% endcall %}

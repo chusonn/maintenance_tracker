@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
-{% from "_components.html" import page_header, form_textarea, status_badge, csrf %}
+{% from "_components.html" import page_header, form_field, form_textarea, form_select, status_badge, csrf %}
 
 {% block title %}Follow Up - Maintenance Tracker{% endblock %}
 
@@ -11,15 +11,54 @@
 
 <div class="row g-4">
     <div class="col-lg-8">
+        {% if not email_configured %}
+        <div class="mt-card mt-hint-card mb-4">
+            <div class="mt-card-body">
+                <strong>Email sending is not set up.</strong>
+                <p class="mb-0 mt-1">Add <code>SMTP_USERNAME</code> and <code>SMTP_PASSWORD</code> to your
+                <code>.env</code> file (see <code>.env.example</code> for Gmail App Password steps) to send
+                emails from here. You can still record a follow-up below.</p>
+            </div>
+        </div>
+        {% elif not job.contractor %}
+        <div class="mt-card mt-hint-card warning mb-4">
+            <div class="mt-card-body">
+                <strong>No contractor assigned.</strong>
+                <p class="mb-0 mt-1"><a href="{{ url_for('jobs.schedule', job_id=job.id) }}">Schedule this job</a>
+                to assign a contractor, or enter an email address manually below.</p>
+            </div>
+        </div>
+        {% elif not job.contractor.email %}
+        <div class="mt-card mt-hint-card warning mb-4">
+            <div class="mt-card-body">
+                <strong>{{ job.contractor.name }} has no email address on file.</strong>
+                <p class="mb-0 mt-1"><a href="{{ url_for('contractors.edit', contractor_id=job.contractor.id) }}">Add one
+                to their contractor record</a>, or enter an address manually below.</p>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="mt-card">
             <div class="mt-card-body">
                 <form method="POST">
                     {{ csrf() }}
-                    {{ form_textarea('follow_up_notes', 'Follow-up notes', rows=4, required=True,
+                    {{ form_select('template_id', 'Template', template_options,
+                                   selected=form.template_id,
+                                   placeholder='No template - write from scratch') }}
+                    {{ form_field('recipient', 'To', type='email', value=form.recipient,
+                                  placeholder='contractor@company.co.uk') }}
+                    {{ form_field('subject', 'Subject', value=form.subject) }}
+                    {{ form_textarea('body', 'Message', rows=10, value=form.body) }}
+                    {{ form_textarea('follow_up_notes', 'Internal notes (not emailed)', rows=3,
+                                     value=form.follow_up_notes,
                                      placeholder='Who did you chase, what did they say, what happens next…') }}
-                    <div class="d-flex gap-2 mt-2">
-                        <button type="submit" class="btn btn-primary">
-                            {{ icon('mail', 16) }} Record Follow-up #{{ (job.follow_up_count or 0) + 1 }}
+                    <div class="d-flex gap-2 mt-2 flex-wrap">
+                        <button type="submit" name="action" value="send" class="btn btn-primary"
+                                {{ 'disabled' if not email_configured }}>
+                            {{ icon('send', 16) }} Send email &amp; record
+                        </button>
+                        <button type="submit" name="action" value="record" class="btn btn-outline-secondary">
+                            {{ icon('check', 16) }} Record without emailing
                         </button>
                         <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
@@ -28,19 +67,39 @@
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="mt-card">
+        <div class="mt-card mb-4">
             <div class="mt-card-header"><h2 class="mt-card-title">History</h2></div>
             <div class="mt-card-body">
                 <p class="mb-2"><span class="mt-meta">Status</span><br>{{ status_badge(job.status) }}</p>
+                <p class="mb-2"><span class="mt-meta">Contractor</span><br>
+                    {% if job.contractor %}{{ job.contractor.name }}{% else %}—{% endif %}</p>
                 <p class="mb-2"><span class="mt-meta">Follow-ups sent</span><br>{{ job.follow_up_count or 0 }}</p>
                 {% if job.follow_up_date %}
                 <p class="mb-2"><span class="mt-meta">Last follow-up</span><br>{{ job.follow_up_date | ukdate }}</p>
                 {% endif %}
                 {% if job.follow_up_notes %}
-                <p class="mb-0"><span class="mt-meta">Last notes</span><br>{{ job.follow_up_notes }}</p>
+                <p class="mb-0"><span class="mt-meta">Last notes</span><br>
+                    <span class="mt-prewrap">{{ job.follow_up_notes }}</span></p>
                 {% endif %}
+            </div>
+        </div>
+        <div class="mt-card">
+            <div class="mt-card-header"><h2 class="mt-card-title">Placeholders</h2></div>
+            <div class="mt-card-body">
+                <p class="mt-meta mb-3">Picking a template fills these in with this job's details.
+                You can also type them into the subject or message yourself.</p>
+                {% for name, description in placeholders.items() %}
+                <p class="mb-2"><code>{{ '{' ~ name ~ '}' }}</code>
+                    <span class="mt-meta">— {{ description }}</span></p>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<script type="application/json" id="followup-prefill">{{ prefill | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/followup.js') }}"></script>
 {% endblock %}

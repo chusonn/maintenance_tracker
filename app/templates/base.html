@@ -37,6 +37,9 @@
             <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('contractors.') }}" href="{{ url_for('contractors.index') }}">
                 {{ icon('users', 18) }} Contractors
             </a>
+            <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('message_templates.') }}" href="{{ url_for('message_templates.index') }}">
+                {{ icon('file-text', 18) }} Email Templates
+            </a>
             <span class="mt-nav-label">System</span>
             <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('recycle.') }}" href="{{ url_for('recycle.index') }}">
                 {{ icon('trash', 18) }} Recycle Bin

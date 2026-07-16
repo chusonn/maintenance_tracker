@@ -8,9 +8,12 @@ A Flask web app for managing UK rental-property maintenance: flats and tenancies
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
+🎬 **[Watch the 50-second demo](docs/demo.mp4)** — a captioned walkthrough: composing a follow-up from a template, sending it, then bulk-sending the whole due queue (recorded against a local test mailbox with demo data).
+
 ## Features
 
 - **Job lifecycle** — `Pending → Scheduled → In Progress → Completed` (or `Cancelled`), with four priority levels, contractor assignment, estimated-vs-actual cost tracking, and per-job follow-up counts so nothing slips.
+- **Follow-up emails** — compose real emails to contractors from editable templates with per-job placeholders (`{contractor_name}`, `{flat_address}`, …), review before sending, and a due-follow-ups queue with one-click bulk send for jobs that have gone quiet. Sending is optional (Gmail SMTP via App Password in `.env`); without it, follow-ups are still recorded.
 - **Analytics** — monthly job volume, estimated-vs-actual spend on completed jobs, status/priority breakdowns, and top contractors by completed work. Chart.js reading the app's design tokens; every chart has a data-table twin for accessibility.
 - **Flats & tenancies** — properties keyed by a unique payment reference, with tenant details, rent, due dates, and open-job counts at a glance.
 - **Excel round-trip** — bulk-import flats from spreadsheets (upserts by payment reference, tolerant of messy real-world data) and export the jobs register to `.xlsx`.
@@ -44,6 +47,8 @@ venv/bin/python run.py                                            # → http://1
 
 The SQLite database is created automatically in `instance/` on first run. Configuration is via environment variables (or a `.env` file): `SECRET_KEY`, `DATABASE_URL`, `FLASK_DEBUG`, `HOST`, `PORT`.
 
+To enable follow-up email sending, set `SMTP_USERNAME` and `SMTP_PASSWORD` in `.env` (for Gmail: a per-app [App Password](https://myaccount.google.com/apppasswords), which requires 2-Step Verification). Everything else works without it — see `.env.example`.
+
 ## Development
 
 ```bash
@@ -67,10 +72,13 @@ app/
 ├── db_migrate.py          # idempotent startup schema sync (additive only)
 ├── cli.py                 # flask backup / list-backups / restore
 ├── seed.py                # flask seed — deterministic UK demo data
-├── blueprints/            # dashboard, analytics, jobs, flats, contractors, recycle
+├── blueprints/            # dashboard, analytics, jobs, flats, contractors,
+│                          #   message_templates, recycle
 ├── services/
 │   ├── excel_io.py        # Excel import/export (pandas lazy-imported)
-│   └── analytics.py       # pure aggregation functions for the analytics page
+│   ├── analytics.py       # pure aggregation functions for the analytics page
+│   ├── emailer.py         # SMTP transport (stdlib smtplib, STARTTLS)
+│   └── followup.py        # placeholder rendering, due-followups query, defaults
 ├── templates/             # Jinja2; _components.html + _icons.html macro library
 └── static/
     ├── css/app.css        # design tokens (--mt-*) + component classes

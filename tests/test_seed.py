@@ -1,13 +1,13 @@
 from sqlalchemy import func, select
 
 from app.extensions import db
-from app.models import Contractor, Flat, MaintenanceJob
+from app.models import Contractor, Flat, MaintenanceJob, MessageTemplate
 from app.seed import seed_data
 
 
 def test_seed_is_deterministic_and_consistent(app):
     counts = seed_data()
-    assert counts == {"flats": 15, "contractors": 6, "jobs": 60}
+    assert counts == {"flats": 15, "contractors": 6, "jobs": 60, "templates": 3}
 
     def count(model):
         return db.session.scalar(select(func.count()).select_from(model))
@@ -15,6 +15,7 @@ def test_seed_is_deterministic_and_consistent(app):
     assert count(Flat) == 15
     assert count(Contractor) == 6
     assert count(MaintenanceJob) == 60
+    assert count(MessageTemplate) == 3
 
     # completed jobs must be coherent: contractor, dates, actual cost
     completed = db.session.scalars(

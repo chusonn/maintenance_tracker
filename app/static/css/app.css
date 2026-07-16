@@ -780,6 +780,20 @@ a:hover {
   font-size: var(--mt-text-xs);
 }
 
+/* ============ Hint cards (inline callouts) ============ */
+
+.mt-hint-card {
+  border-left: 3px solid var(--mt-info-600);
+}
+
+.mt-hint-card.warning {
+  border-left-color: var(--mt-warning-600);
+}
+
+.mt-prewrap {
+  white-space: pre-line;
+}
+
 /* ============ Analytics charts ============ */
 
 .mt-chart {

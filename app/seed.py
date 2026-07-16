@@ -5,13 +5,14 @@ Seeded RNG means repeated runs produce identical data.
 """
 
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 import click
 from flask.cli import with_appcontext
 
 from .extensions import db
 from .models import Contractor, Flat, MaintenanceJob
+from .services.followup import ensure_default_templates
 
 STREETS = [
     "Victoria Road", "Albert Street", "Church Lane", "High Street", "Station Road",
@@ -134,11 +135,20 @@ def seed_data(flat_count: int = 15, job_count: int = 60) -> dict:
         if status in ("Scheduled", "In Progress") and rng.random() < 0.6:
             job.follow_up_count = rng.randint(1, 3)
             job.follow_up_notes = "Chased contractor for an update."
+            job.follow_up_date = datetime.combine(
+                reported + timedelta(days=rng.randint(2, 20)), time(10, 30)
+            )
 
         db.session.add(job)
 
     db.session.commit()
-    return {"flats": flat_count, "contractors": len(contractors), "jobs": job_count}
+    templates = ensure_default_templates()
+    return {
+        "flats": flat_count,
+        "contractors": len(contractors),
+        "jobs": job_count,
+        "templates": templates,
+    }
 
 
 @click.command("seed")

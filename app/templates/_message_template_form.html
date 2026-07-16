@@ -1,0 +1,27 @@
+{# Shared field set + placeholder help for add/edit message template.
+   `template` may be None. Routes pass `placeholders` (PLACEHOLDERS dict). #}
+{% from "_components.html" import form_field, form_textarea %}
+
+{% macro template_fields(template=None) %}
+{{ form_field('name', 'Template name', value=template.name if template else '', required=True,
+              placeholder='e.g. Chase - awaiting update') }}
+{{ form_field('subject', 'Email subject', value=template.subject if template else '', required=True,
+              placeholder='Follow-up: {job_title} at {flat_address}') }}
+{{ form_textarea('body', 'Email body', rows=12, required=True,
+                 value=template.body if template else '',
+                 placeholder='Hi {contractor_name},&#10;&#10;…') }}
+{% endmacro %}
+
+{% macro placeholder_help(placeholders) %}
+<div class="mt-card">
+    <div class="mt-card-header"><h2 class="mt-card-title">Placeholders</h2></div>
+    <div class="mt-card-body">
+        <p class="mt-meta mb-3">Type these anywhere in the subject or body; they're filled in
+        with the job's details when you compose a follow-up. Unknown placeholders are left as-is.</p>
+        {% for name, description in placeholders.items() %}
+        <p class="mb-2"><code>{{ '{' ~ name ~ '}' }}</code><br>
+            <span class="mt-meta">{{ description }}</span></p>
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}

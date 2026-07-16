@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, empty_state, status_badge, form_select, csrf %}
+
+{% block title %}Due Follow-ups - Maintenance Tracker{% endblock %}
+
+{% block content %}
+{% call page_header('Due Follow-ups', 'Active jobs with no update in the last ' ~ days ~ ' days') %}
+    <a href="{{ url_for('jobs.index') }}" class="btn btn-outline-secondary">{{ icon('arrow-left', 16) }} Back to jobs</a>
+    {% if jobs %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mtBulkSendModal"
+            {{ 'disabled' if not email_configured or not sendable_count }}>
+        {{ icon('send', 16) }} Send all…
+    </button>
+    {% endif %}
+{% endcall %}
+
+{% if not email_configured and jobs %}
+<div class="mt-card mt-hint-card mb-4">
+    <div class="mt-card-body">
+        <strong>Email sending is not set up.</strong>
+        <p class="mb-0 mt-1">Add <code>SMTP_USERNAME</code> and <code>SMTP_PASSWORD</code> to your
+        <code>.env</code> file (see <code>.env.example</code>) to enable the bulk send. Individual
+        follow-ups can still be recorded from each job's Compose page.</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-card">
+    <div class="mt-card-body flush mt-table-wrap">
+        {% if jobs %}
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Job</th>
+                    <th>Contractor</th>
+                    <th>Status</th>
+                    <th>Follow-ups</th>
+                    <th>Last follow-up</th>
+                    <th>Reported</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td class="primary">{{ job.flat.payment_reference }}</td>
+                    <td class="primary">{{ job.title }}</td>
+                    <td>
+                        {% if job.contractor %}
+                        <div>{{ job.contractor.name }}</div>
+                        {% if job.contractor.email %}
+                        <div class="mt-meta">{{ job.contractor.email }}</div>
+                        {% else %}
+                        <span class="mt-badge tone-warning">No email</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="mt-badge tone-warning">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ status_badge(job.status) }}</td>
+                    <td>{{ job.follow_up_count or 0 }}</td>
+                    <td>{{ job.follow_up_date | ukdate if job.follow_up_date else 'Never' }}</td>
+                    <td>{{ job.reported_date | ukdate }}</td>
+                    <td>
+                        <div class="mt-row-actions">
+                            <a href="{{ url_for('jobs.followup', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm" title="Compose follow-up">
+                                {{ icon('mail', 14) }} Compose
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        {{ empty_state('check-circle', 'Nothing due', 'Every active job has been touched in the last ' ~ days ~ ' days.', url_for('jobs.index'), 'Back to jobs') }}
+        {% endif %}
+    </div>
+</div>
+
+{% if jobs %}
+<div class="modal fade" id="mtBulkSendModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('jobs.bulk_followup') }}">
+                {{ csrf() }}
+                <div class="modal-header">
+                    <h5 class="modal-title">Send all due follow-ups</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ form_select('template_id', 'Template', template_options, required=True,
+                                   selected=template_options[0][0] if template_options else None) }}
+                    <p class="mb-0">This will email <strong>{{ sendable_count }}</strong>
+                    contractor{{ 's' if sendable_count != 1 }}{% if jobs | length > sendable_count %};
+                    <strong>{{ jobs | length - sendable_count }}</strong>
+                    job{{ 's' if jobs | length - sendable_count != 1 }} will be skipped (no contractor email){% endif %}.
+                    Each email is filled in from the template with that job's details.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">{{ icon('send', 16) }} Send {{ sendable_count }} email{{ 's' if sendable_count != 1 }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

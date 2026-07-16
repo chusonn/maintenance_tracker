@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, empty_state, csrf %}
+
+{% block title %}Email Templates - Maintenance Tracker{% endblock %}
+
+{% block content %}
+{% call page_header('Email Templates', 'Preset follow-up messages with per-job placeholders') %}
+    <a href="{{ url_for('message_templates.add') }}" class="btn btn-primary">{{ icon('plus', 16) }} Add Template</a>
+{% endcall %}
+
+<div class="mt-card">
+    <div class="mt-card-body flush mt-table-wrap">
+        {% if templates %}
+        <table class="mt-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for template in templates %}
+                <tr>
+                    <td class="primary">{{ template.name }}</td>
+                    <td>{{ template.subject }}</td>
+                    <td>{{ template.updated_at | ukdate }}</td>
+                    <td>
+                        <div class="mt-row-actions">
+                            <a href="{{ url_for('message_templates.edit', template_id=template.id) }}" class="btn btn-outline-secondary btn-sm" title="Edit">
+                                {{ icon('pencil', 14) }}
+                            </a>
+                            <form method="POST" action="{{ url_for('message_templates.delete', template_id=template.id) }}"
+                                  data-confirm="Permanently delete the template '{{ template.name }}'? This cannot be undone.">
+                                {{ csrf() }}
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                    {{ icon('trash', 14) }}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        {{ empty_state('mail', 'No templates yet', 'Create a preset follow-up message to reuse across jobs.', url_for('message_templates.add'), 'Add Template') }}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

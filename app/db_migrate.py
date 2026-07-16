@@ -62,3 +62,11 @@ def ensure_schema() -> None:
         conn.commit()
 
     db.create_all()
+
+    # Default follow-up email templates (inserted only when the table is
+    # empty, so user edits are never overwritten).
+    from .services.followup import ensure_default_templates
+
+    inserted = ensure_default_templates()
+    if inserted:
+        log.info("Seeded %d default message templates", inserted)

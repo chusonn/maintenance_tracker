@@ -1,11 +1,26 @@
 from datetime import date, datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, send_file, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from sqlalchemy import func, or_, select
 
 from ..extensions import db
-from ..models import ACTIVE_JOB_STATUSES, Contractor, Flat, MaintenanceJob, utcnow
-from ..services import excel_io
+from ..models import ACTIVE_JOB_STATUSES, Contractor, Flat, MaintenanceJob, MessageTemplate
+from ..services import emailer, excel_io
+from ..services.followup import (
+    PLACEHOLDERS,
+    due_followups_stmt,
+    record_followup,
+    render_template_for_job,
+)
 
 bp = Blueprint("jobs", __name__, url_prefix="/jobs")
 
@@ -189,19 +204,159 @@ def complete(job_id: int):
     )
 
 
+def _render_composer(job, form=None):
+    """Composer page; `form` echoes submitted values back after a failed send."""
+    templates = db.session.scalars(
+        select(MessageTemplate).order_by(MessageTemplate.name)
+    ).all()
+    return render_template(
+        "followup_job.html",
+        job=job,
+        template_options=[(str(t.id), t.name) for t in templates],
+        prefill={str(t.id): render_template_for_job(t, job) for t in templates},
+        placeholders=PLACEHOLDERS,
+        email_configured=emailer.is_configured(current_app.config),
+        form=form
+        or {
+            "recipient": (job.contractor.email or "") if job.contractor else "",
+            "subject": "",
+            "body": "",
+            "follow_up_notes": "",
+            "template_id": "",
+        },
+    )
+
+
 @bp.route("/<int:job_id>/followup", methods=["GET", "POST"])
 def followup(job_id: int):
     job = db.get_or_404(MaintenanceJob, job_id)
 
     if request.method == "POST":
-        job.follow_up_count = (job.follow_up_count or 0) + 1
-        job.follow_up_date = utcnow()
-        job.follow_up_notes = request.form["follow_up_notes"]
+        action = request.form.get("action", "record")
+        notes = request.form.get("follow_up_notes", "")
+
+        if action == "send":
+            form = {
+                "recipient": (request.form.get("recipient") or "").strip(),
+                "subject": request.form.get("subject", ""),
+                "body": request.form.get("body", ""),
+                "follow_up_notes": notes,
+                "template_id": request.form.get("template_id", ""),
+            }
+            if not emailer.is_configured(current_app.config):
+                flash(
+                    "Email sending is not configured - set SMTP_USERNAME and "
+                    "SMTP_PASSWORD in .env, or record the follow-up without emailing.",
+                    "warning",
+                )
+                return _render_composer(job, form)
+            if not form["recipient"]:
+                flash("Enter a recipient email address.", "warning")
+                return _render_composer(job, form)
+            try:
+                emailer.send_email(
+                    current_app.config,
+                    to=form["recipient"],
+                    subject=form["subject"],
+                    body=form["body"],
+                )
+            except emailer.EmailSendError as exc:
+                flash(str(exc), "danger")
+                return _render_composer(job, form)
+            record_followup(job, notes, emailed_to=form["recipient"], subject=form["subject"])
+            db.session.commit()
+            flash(
+                f"Follow-up #{job.follow_up_count} emailed to {form['recipient']}.",
+                "success",
+            )
+            return redirect(url_for("jobs.index"))
+
+        record_followup(job, notes)
         db.session.commit()
         flash(f"Follow-up #{job.follow_up_count} marked as sent!", "success")
         return redirect(url_for("jobs.index"))
 
-    return render_template("followup_job.html", job=job, today_date=date.today())
+    return _render_composer(job)
+
+
+@bp.route("/due-followups")
+def due_followups():
+    days = current_app.config["FOLLOW_UP_DAYS"]
+    jobs = db.session.scalars(due_followups_stmt(days)).all()
+    templates = db.session.scalars(
+        select(MessageTemplate).order_by(MessageTemplate.name)
+    ).all()
+    sendable = [j for j in jobs if j.contractor and j.contractor.email]
+    return render_template(
+        "due_followups.html",
+        jobs=jobs,
+        template_options=[(str(t.id), t.name) for t in templates],
+        days=days,
+        sendable_count=len(sendable),
+        email_configured=emailer.is_configured(current_app.config),
+    )
+
+
+@bp.route("/due-followups/send-all", methods=["POST"])
+def bulk_followup():
+    if not emailer.is_configured(current_app.config):
+        flash(
+            "Email sending is not configured - set SMTP_USERNAME and SMTP_PASSWORD in .env.",
+            "warning",
+        )
+        return redirect(url_for("jobs.due_followups"))
+
+    template = db.session.get(MessageTemplate, request.form.get("template_id", type=int) or 0)
+    if template is None:
+        flash("Choose a template for the bulk send.", "warning")
+        return redirect(url_for("jobs.due_followups"))
+
+    days = current_app.config["FOLLOW_UP_DAYS"]
+    jobs = db.session.scalars(due_followups_stmt(days)).all()
+
+    sent, skipped, failed = [], [], []
+    for job in jobs:
+        recipient = job.contractor.email if job.contractor else None
+        if not recipient:
+            skipped.append(job.title)
+            continue
+        rendered = render_template_for_job(template, job)
+        try:
+            emailer.send_email(
+                current_app.config,
+                to=recipient,
+                subject=rendered["subject"],
+                body=rendered["body"],
+            )
+        except emailer.EmailSendError as exc:
+            failed.append(f"{job.title} ({exc})")
+            continue
+        record_followup(
+            job,
+            f"Bulk follow-up sent using template '{template.name}'.",
+            emailed_to=recipient,
+            subject=rendered["subject"],
+        )
+        sent.append(job.title)
+    db.session.commit()
+
+    if not (sent or skipped or failed):
+        flash("Nothing is currently due for follow-up.", "info")
+        return redirect(url_for("jobs.due_followups"))
+
+    parts = [f"Sent {len(sent)} follow-up email{'s' if len(sent) != 1 else ''}."]
+    if skipped:
+        parts.append(f"Skipped {len(skipped)} with no contractor email: {', '.join(skipped)}.")
+    if failed:
+        parts.append(f"Failed: {'; '.join(failed)}.")
+    if sent and not (skipped or failed):
+        category = "success"
+    elif sent:
+        category = "warning"
+    else:
+        category = "danger"
+    flash(" ".join(parts), category)
+    return redirect(url_for("jobs.due_followups"))
 
 
 @bp.route("/<int:job_id>/delete", methods=["POST"])

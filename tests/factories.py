@@ -3,7 +3,7 @@
 from datetime import date
 
 from app.extensions import db
-from app.models import Contractor, Flat, MaintenanceJob
+from app.models import Contractor, Flat, MaintenanceJob, MessageTemplate
 
 _counter = {"n": 0}
 
@@ -42,6 +42,19 @@ def make_contractor(**overrides) -> Contractor:
     db.session.add(contractor)
     db.session.commit()
     return contractor
+
+
+def make_template(**overrides) -> MessageTemplate:
+    n = _next()
+    defaults = {
+        "name": f"Template {n}",
+        "subject": "Follow-up: {job_title} ({payment_reference})",
+        "body": "Hi {contractor_name},\n\nAny update on {job_title}?\n\nThanks",
+    }
+    template = MessageTemplate(**{**defaults, **overrides})
+    db.session.add(template)
+    db.session.commit()
+    return template
 
 
 def make_job(flat: Flat | None = None, **overrides) -> MaintenanceJob:
