@@ -32,6 +32,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Theme toggle: flips data-theme/data-bs-theme (set by theme.js before
+  // paint), persists the choice, and tells listeners (charts) to restyle.
+  var themeToggle = document.querySelector('[data-role="theme-toggle"]');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      document.documentElement.setAttribute('data-bs-theme', next);
+      try { localStorage.setItem('mt-theme', next); } catch (e) { /* blocked storage */ }
+      document.dispatchEvent(new CustomEvent('mt:themechange'));
+    });
+  }
+
   // Mobile sidebar toggle
   var sidebar = document.querySelector('.mt-sidebar');
   var backdrop = document.querySelector('.mt-backdrop');

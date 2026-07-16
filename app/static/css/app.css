@@ -41,6 +41,7 @@
   --mt-danger-700: #b42318;
   --mt-purple-50: #f4f3ff;
   --mt-purple-600: #6938ef;
+  --mt-purple-700: #5925dc;
 
   /* --- Semantic aliases --- */
   --mt-bg: var(--mt-gray-50);
@@ -74,9 +75,121 @@
   --mt-shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
   --mt-shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
 
+  /* --- Role tokens ---
+     Aliases in light mode; remapped independently in [data-theme="dark"]
+     because a tint-scale step can't serve both modes (e.g. a 700 is a dark
+     hover bg in light mode but light badge text in dark mode). */
+  --mt-link: var(--mt-accent-600);
+  --mt-link-hover: var(--mt-accent-700);
+  --mt-nav-active-text: var(--mt-accent-700);
+  --mt-chart-accent: var(--mt-accent-600);
+  --mt-chart-neutral: var(--mt-gray-500);      /* Pending + Estimated marks */
+  --mt-chart-neutral-deep: var(--mt-gray-500); /* Low marks (dark pairs it against the cyan) */
+  --mt-chart-neutral-soft: var(--mt-gray-400); /* Cancelled marks */
+
   /* --- Layout --- */
   --mt-sidebar-width: 248px;
   --mt-topbar-height: 60px;
+
+  color-scheme: light;
+}
+
+/* ============ Dark theme ============
+   Applied via data-theme="dark" on <html> (theme.js, before first paint).
+   Values are selected for dark surfaces — not an automatic inversion — and
+   the chart colors are validated (CVD ΔE + contrast) against --mt-surface. */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Neutrals: roles preserved (higher step = stronger ink) */
+  --mt-gray-25: #1b212e;
+  --mt-gray-50: #1e2432;
+  --mt-gray-100: #242b3a;
+  --mt-gray-200: #2c3444;
+  --mt-gray-300: #3b445c;
+  --mt-gray-400: #5e6c86;
+  --mt-gray-500: #94a1ba;
+  --mt-gray-600: #b4bed2;
+  --mt-gray-700: #ccd4e3;
+  --mt-gray-800: #e2e7f0;
+  --mt-gray-900: #f2f5fa;
+
+  /* Accent: buttons/logo keep the light-mode 600/700; tints and the focus
+     shade adapt. */
+  --mt-accent-50: #1c2447;
+  --mt-accent-100: #2a3170;
+  --mt-accent-500: #8098f9;
+
+  /* Semantic: 50s become deep tints (badge/icon backgrounds), 700s become
+     light badge text, 600s are the validated dark chart/icon colors. */
+  --mt-success-50: #053321;
+  --mt-success-700: #47cd89;
+  --mt-info-50: #062f44;
+  --mt-info-600: #00a0e4;
+  --mt-info-700: #36bffa;
+  --mt-warning-50: #4e1d09;
+  --mt-warning-700: #fec84b;
+  --mt-danger-50: #510b24;
+  --mt-danger-600: #e31b63;
+  --mt-danger-700: #fda2b6;
+  --mt-purple-50: #2e125e;
+  --mt-purple-600: #875bf7;
+  --mt-purple-700: #a48afb;
+
+  /* Aliases (border/text follow the gray remap automatically) */
+  --mt-bg: #0c111d;
+  --mt-surface: #161b26;
+
+  /* Role tokens */
+  --mt-link: #8098f9;
+  --mt-link-hover: #a4bcfd;
+  --mt-nav-active-text: #a4bcfd;
+  --mt-chart-accent: #6172f3;
+  --mt-chart-neutral: #78869e;
+  --mt-chart-neutral-deep: var(--mt-gray-400);
+
+  /* Shadows need more weight on dark surfaces */
+  --mt-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --mt-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --mt-shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+
+  /* Bridge Bootstrap's data-bs-theme="dark" palette onto our tokens so form
+     controls, the delete modal and pagination sit on the same surfaces. */
+  --bs-body-bg: var(--mt-surface);
+  --bs-body-color: var(--mt-text);
+  --bs-border-color: var(--mt-border);
+  --bs-secondary-color: var(--mt-text-secondary);
+  --bs-tertiary-color: var(--mt-text-muted);
+  --bs-tertiary-bg: var(--mt-gray-100);
+}
+
+/* In dark mode danger-700 is light badge text, so the danger buttons need
+   their own darker hover shade. */
+[data-theme="dark"] .btn-danger {
+  --bs-btn-hover-bg: #c11355;
+  --bs-btn-hover-border-color: #c11355;
+}
+[data-theme="dark"] .btn-outline-danger {
+  --bs-btn-hover-color: var(--mt-danger-700);
+}
+[data-theme="dark"] .mt-backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Theme toggle shows the mode you'd switch to */
+.mt-theme-icon-moon,
+.mt-theme-icon-sun {
+  display: inline-flex;
+}
+.mt-theme-icon-sun {
+  display: none;
+}
+[data-theme="dark"] .mt-theme-icon-sun {
+  display: inline-flex;
+}
+[data-theme="dark"] .mt-theme-icon-moon {
+  display: none;
 }
 
 /* ============ Base ============ */
@@ -101,11 +214,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 a {
-  color: var(--mt-accent-600);
+  color: var(--mt-link);
   text-decoration: none;
 }
 a:hover {
-  color: var(--mt-accent-700);
+  color: var(--mt-link-hover);
 }
 
 /* ============ App shell ============ */
@@ -183,7 +296,7 @@ a:hover {
 
 .mt-nav-link.active {
   background: var(--mt-accent-50);
-  color: var(--mt-accent-700);
+  color: var(--mt-nav-active-text);
 }
 
 .mt-nav-link svg {
@@ -373,7 +486,7 @@ a:hover {
 
 /* status */
 .mt-badge.status-pending     { background: var(--mt-gray-100);    color: var(--mt-gray-700);    border-color: var(--mt-gray-200); }
-.mt-badge.status-scheduled   { background: var(--mt-purple-50);   color: var(--mt-purple-600); }
+.mt-badge.status-scheduled   { background: var(--mt-purple-50);   color: var(--mt-purple-700); }
 .mt-badge.status-in-progress { background: var(--mt-info-50);     color: var(--mt-info-700); }
 .mt-badge.status-completed   { background: var(--mt-success-50);  color: var(--mt-success-700); }
 .mt-badge.status-cancelled   { background: var(--mt-gray-100);    color: var(--mt-gray-500);    text-decoration: line-through; }

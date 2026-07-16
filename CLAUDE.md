@@ -27,11 +27,12 @@ App-factory + blueprints (Flask 3.1, SQLAlchemy 2.0 style — `Mapped` models, `
 - `app/db_migrate.py` — `ensure_schema()`: idempotent PRAGMA-based column adds + `create_all()`; runs in `create_app()` when `RUN_SCHEMA_SYNC` is true (off in `TestConfig`). Migrations only ever ADD columns and backfill.
 - `app/cli.py` — `flask backup` / `list-backups` / `restore N`; paths derive from `app.instance_path` so they always hit the live DB.
 - `app/templates/` — Jinja2. Design system lives in `app/static/css/app.css` (tokens) + `_components.html`/`_icons.html` (macros); see the `design-system` skill before touching any UI. Bootstrap 5.3 CDN is used for grid + JS behaviors only.
+- **Dark mode**: `data-theme`/`data-bs-theme` on `<html>`, set before paint by `static/js/theme.js` (`?theme=` param > localStorage > OS preference). All dark values live in one `[data-theme="dark"]` block in app.css; the topbar toggle dispatches `mt:themechange` and analytics.js rebuilds its charts to re-read tokens. **New colors must be defined in both `:root` and the dark block** — details in the `design-system` skill.
 - **Live database: `instance/maintenance_tracker.db`** — NOT the root path that `DATABASE_URL=sqlite:///maintenance_tracker.db` appears to point at. Flask-SQLAlchemy 3.x resolves relative SQLite paths against `app.instance_path`. This looks wrong but is correct; don't "fix" it.
 
 ### Roadmap (agreed with Ralph, July 2026)
 
-Portfolio upgrade in phases — **all complete (July 2026)**: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ ~~(4) full UI redesign — clean SaaS design system~~ ✔ ~~(5) analytics page with Chart.js~~ ✔ ~~(6) README + screenshots (`docs/screenshots/`, taken on seeded scratch DB)~~ ✔. Public on GitHub since July 2026: `github.com/chusonn/maintenance_tracker` (remote `origin`), CI green.
+Portfolio upgrade in phases — **all complete (July 2026)**: ~~(1) modernize deps to Flask 3.1~~ ✔ ~~(2) app-factory + blueprints refactor~~ ✔ ~~(3) pytest + CSRF + bug fixes + `flask seed` + GitHub Actions CI~~ ✔ ~~(4) full UI redesign — clean SaaS design system~~ ✔ ~~(5) analytics page with Chart.js~~ ✔ ~~(6) README + screenshots (`docs/screenshots/`, taken on seeded scratch DB)~~ ✔ ~~(stretch) dark mode — token swap via `data-theme`, chart palette CVD-validated per mode~~ ✔. Public on GitHub since July 2026: `github.com/chusonn/maintenance_tracker` (remote `origin`), CI green.
 
 ## Domain conventions
 
@@ -50,7 +51,7 @@ Portfolio upgrade in phases — **all complete (July 2026)**: ~~(1) modernize de
 - Console is cp1252: don't `print()` emoji/unicode from Python on startup paths — it raises `UnicodeEncodeError` on some Windows consoles. Keep startup logging ASCII.
 - `requirements.txt` must stay UTF-8. (It was once UTF-16 and broke `pip install -r` on Linux.)
 - pandas import costs ~1–2 s on Windows — keep it lazily imported inside the Excel routes, never at module top level.
-- Backups: `backups/` is git-ignored. `backup_manager.py restore` currently restores to the repo root, which the app never reads — restore manually into `instance/` until this is fixed in the refactor.
+- Backups: `backups/` is git-ignored. Use the `flask backup` / `flask restore N` CLI (paths derive from `app.instance_path`, so they hit the live DB) — and stop the dev server first, per the file-locking rule above. The old root-level `backup_manager.py` is gone.
 
 ## Project skills
 

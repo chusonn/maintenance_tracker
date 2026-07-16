@@ -16,6 +16,7 @@ A Flask web app for managing UK rental-property maintenance: flats and tenancies
 - **Excel round-trip** — bulk-import flats from spreadsheets (upserts by payment reference, tolerant of messy real-world data) and export the jobs register to `.xlsx`.
 - **Soft-delete recycle bin** — deleting any flat, contractor, or job moves it to a bin; restore or permanently purge from there. Deleting a flat cascades to its jobs and restores them together.
 - **Safety rails** — CSRF protection on every form, confirmation on every destructive action, `flask backup` / `restore` CLI for the database, idempotent startup schema migrations.
+- **Light & dark themes** — one-click toggle that follows the OS preference by default. The dark chart palette is selected and colour-vision-validated against the dark surface, not auto-inverted.
 - **UK conventions** — currency in GBP, dates displayed as `dd/mm/yyyy` throughout.
 
 | Jobs | Analytics |
@@ -24,6 +25,8 @@ A Flask web app for managing UK rental-property maintenance: flats and tenancies
 
 <details>
 <summary>More screenshots</summary>
+
+![Analytics in dark mode](docs/screenshots/analytics-dark.png)
 
 ![Flats list](docs/screenshots/flats.png)
 

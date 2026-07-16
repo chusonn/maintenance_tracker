@@ -27,6 +27,14 @@ Clean-SaaS design, token-based. Everything visual flows from CSS custom properti
 - Deletes: use the shared `#mtDeleteModal` pattern (`data-delete-url` + `data-delete-label` on the trigger) or `form[data-confirm="…"]` for simple confirms. Danger buttons are `.btn-outline-danger`/`.btn-danger`.
 - Shared form partials: `_flat_form.html`, `_contractor_form.html`.
 
+## Dark mode
+
+- Theme = `data-theme` + `data-bs-theme` on `<html>`, set **before first paint** by `static/js/theme.js` (priority: `?theme=` query param — handy for screenshots, not persisted — then localStorage `mt-theme`, then OS `prefers-color-scheme`). The topbar toggle (`data-role="theme-toggle"`, handled in app.js) flips both attributes, persists the choice, and dispatches `mt:themechange`; analytics.js listens and rebuilds its charts so they re-read tokens.
+- All dark values live in **one `[data-theme="dark"]` block** in app.css, directly after `:root`. It remaps the gray scale (roles preserved: higher step = stronger ink), turns semantic `-50`s into deep tints, `-700`s into light badge text, keeps `accent-600/700` for buttons, and bridges `--bs-body-bg`/`--bs-border-color`/etc. so Bootstrap modals, forms and pagination sit on the same surfaces.
+- **Role tokens** (`--mt-link`, `--mt-link-hover`, `--mt-nav-active-text`, `--mt-chart-accent`, `--mt-chart-neutral`, `--mt-chart-neutral-deep`, `--mt-chart-neutral-soft`) exist because one tint step can't serve both modes (a 700 is a dark hover bg in light mode but light badge text in dark). In `:root` they alias the scales; the dark block remaps them independently. `danger-700` is additionally special-cased on `.btn-danger`/`.btn-outline-danger` in dark.
+- **Any new color must be defined in both `:root` and the dark block** (or be an alias of tokens that already are). Chart colors must also pass the dataviz skill's `validate_palette.js` against `--mt-surface` in **both** modes — the dark chart palette (cyan info `#00a0e4`, rose danger `#e31b63`, violet `#875bf7`, greens/ambers, two grays) was *selected* per-slot to pass CVD + contrast checks, never auto-inverted. Re-validate if you touch any of it.
+- Verify UI changes in **both themes** (append `?theme=dark` / `?theme=light` to any URL) on seeded and empty databases.
+
 ## Rules
 
 - Currency renders via the `| gbp` filter (£, thousands separators); dates via `| ukdate` (dd/mm/yyyy). Missing values show "—". Never hand-format either.
