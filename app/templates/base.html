@@ -44,9 +44,12 @@
             <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('recycle.') }}" href="{{ url_for('recycle.index') }}">
                 {{ icon('trash', 18) }} Recycle Bin
             </a>
+            <a class="mt-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('settings.') }}" href="{{ url_for('settings.index') }}">
+                {{ icon('settings', 18) }} Settings
+            </a>
         </nav>
         <div class="mt-sidebar-footer">
-            UK property maintenance&nbsp;·&nbsp;local &amp; private
+            UK property maintenance
         </div>
     </aside>
     <div class="mt-backdrop"></div>
@@ -65,6 +68,17 @@
                 <div class="mt-page-actions">
                     {% block topbar_actions %}{% endblock %}
                 </div>
+                {% if current_user.is_authenticated %}
+                <span class="mt-user-chip d-none d-sm-inline-flex" title="Signed in as {{ current_user.email }}">
+                    {{ icon('user', 14) }} {{ current_user.name }}
+                </span>
+                <form method="POST" action="{{ url_for('auth.logout') }}" class="m-0">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm" aria-label="Sign out" title="Sign out">
+                        {{ icon('log-out', 16) }}
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </header>
 

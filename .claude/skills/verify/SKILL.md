@@ -7,7 +7,7 @@ description: Verify or smoke-test that a change to the Maintenance Tracker actua
 
 1. **Tests first** (once the pytest suite exists): `venv\Scripts\python.exe -m pytest -q` must be green before manual verification.
 
-2. **Boot check**: start the server per the `run-app` skill (background), then confirm `http://127.0.0.1:5000/dashboard` returns 200.
+2. **Boot check**: start the server per the `run-app` skill (background), then confirm `http://127.0.0.1:5000/healthz` returns 200 and `/dashboard` redirects to `/login` when signed out. Sign in (scratch DB: start it with `INITIAL_USER_*` env vars) and confirm `/dashboard` returns 200. In browser automation, click form buttons by text: the topbar sign-out is also a submit button.
 
 3. **Core flow click-through** — exercise whatever the change touched, plus this minimum set (use the Flask test client for speed, or the browser when visuals matter):
    - Dashboard renders with correct stat counts.
@@ -16,6 +16,7 @@ description: Verify or smoke-test that a change to the Maintenance Tracker actua
    - Soft-delete the test job → confirm it appears in the recycle bin → restore it → permanently delete it.
    - Flats and Contractors lists render.
    - Excel export downloads (check `Content-Type` is xlsx and status 200).
+   - Sign out → protected pages redirect to `/login`; Settings → Download backup returns a SQLite file.
 
 4. **UI changes**: verify in the real browser, not just the test client — check both a seeded database AND empty states, and one pass at narrow (~400px) width. Watch the browser console for JS errors.
 

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_components.html" import page_header, form_field, csrf %}
+
+{% block title %}Settings - Maintenance Tracker{% endblock %}
+
+{% block content %}
+{{ page_header('Settings', 'Who can sign in, your password, and backups') }}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="mt-card mb-4">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">People with access</h2>
+                <span class="mt-badge tone-neutral">{{ users | length }}</span>
+            </div>
+            <div class="mt-card-body flush mt-table-wrap">
+                <table class="mt-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="d-none d-md-table-cell">Last signed in</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="primary">
+                                {{ user.name }}{% if user.id == current_user.id %} <span class="mt-meta">(you)</span>{% endif %}
+                                <div class="mt-meta">{{ user.email }}</div>
+                            </td>
+                            <td class="d-none d-md-table-cell">{{ user.last_login_at | ukdate }}</td>
+                            <td>
+                                {% if user.is_enabled %}
+                                <span class="mt-badge tone-success">Active</span>
+                                {% else %}
+                                <span class="mt-badge tone-neutral">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.id != current_user.id %}
+                                <div class="mt-row-actions">
+                                    <form method="POST" action="{{ url_for('settings.toggle_user', user_id=user.id) }}"
+                                          {% if user.is_enabled %}data-confirm="Stop {{ user.name }} from signing in? Their name stays on the jobs they logged."{% endif %}>
+                                        {{ csrf() }}
+                                        <button type="submit" class="btn btn-sm {{ 'btn-outline-danger' if user.is_enabled else 'btn-outline-secondary' }}">
+                                            {{ 'Disable' if user.is_enabled else 'Enable' }}
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if user.id != current_user.id %}
+                        <tr>
+                            <td colspan="4">
+                                <details class="mt-inline-details">
+                                    <summary>Reset {{ user.name }}'s password</summary>
+                                    <form method="POST" action="{{ url_for('settings.reset_user_password', user_id=user.id) }}" class="d-flex gap-2 mt-2 flex-wrap">
+                                        {{ csrf() }}
+                                        <label class="visually-hidden" for="reset-{{ user.id }}">New password for {{ user.name }}</label>
+                                        <input type="text" name="password" id="reset-{{ user.id }}" class="form-control form-control-sm mt-inline-input"
+                                               minlength="{{ min_password_length }}" required autocomplete="off"
+                                               placeholder="Temporary password ({{ min_password_length }}+ characters)">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Set password</button>
+                                    </form>
+                                </details>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-card">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Add a person</h2>
+                {{ icon('users', 16) }}
+            </div>
+            <div class="mt-card-body">
+                <form method="POST" action="{{ url_for('settings.add_user') }}">
+                    {{ csrf() }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form_field('name', 'Name', value=new_user.get('name', ''), required=True, help='Shown on the jobs they log.') }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_field('email', 'Email', type='email', value=new_user.get('email', ''), required=True) }}
+                        </div>
+                    </div>
+                    {{ form_field('password', 'Temporary password', required=True, help='At least ' ~ min_password_length ~ ' characters. Share it privately; they can change it here after signing in.') }}
+                    <button type="submit" class="btn btn-primary">{{ icon('plus', 16) }} Add person</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="mt-card mb-4">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Change your password</h2>
+                {{ icon('lock', 16) }}
+            </div>
+            <div class="mt-card-body">
+                <form method="POST" action="{{ url_for('settings.change_password') }}">
+                    {{ csrf() }}
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current password *</label>
+                        <input type="password" name="current_password" id="current_password" class="form-control" autocomplete="current-password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New password *</label>
+                        <input type="password" name="new_password" id="new_password" class="form-control"
+                               minlength="{{ min_password_length }}" autocomplete="new-password" required>
+                        <div class="form-text">At least {{ min_password_length }} characters.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Repeat new password *</label>
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control"
+                               minlength="{{ min_password_length }}" autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change password</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-card">
+            <div class="mt-card-header">
+                <h2 class="mt-card-title">Backups</h2>
+                {{ icon('database', 16) }}
+            </div>
+            <div class="mt-card-body">
+                {% if auto_backup %}
+                <p class="mb-2">A backup is made automatically every day the app is used, and the last {{ keep_days }} are kept.</p>
+                <p class="mt-meta mb-3">
+                    Latest automatic backup:
+                    {% if last_backup %}{{ last_backup | ukdate }} {{ last_backup.strftime('%H:%M') }}{% else %}none yet{% endif %}
+                </p>
+                {% else %}
+                <p class="mb-3">Automatic daily backups are turned off.</p>
+                {% endif %}
+                <p class="mt-meta mb-3">For extra safety, download a copy now and then and keep it somewhere else (e.g. OneDrive).</p>
+                <a href="{{ url_for('settings.download_backup') }}" class="btn btn-outline-secondary">{{ icon('download', 16) }} Download backup</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

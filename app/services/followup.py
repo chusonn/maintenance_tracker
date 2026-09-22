@@ -103,14 +103,17 @@ def record_followup(
     notes: str,
     emailed_to: str | None = None,
     subject: str | None = None,
+    by: str | None = None,
 ) -> None:
     """Increment the follow-up bookkeeping; caller commits. When an email was
-    sent, an audit line is appended to the notes so History shows what went out."""
+    sent, an audit line is appended to the notes so History shows what went
+    out (and, with `by`, who sent it)."""
     job.follow_up_count = (job.follow_up_count or 0) + 1
     job.follow_up_date = utcnow()
     if emailed_to:
         stamp = job.follow_up_date.strftime("%d/%m/%Y %H:%M")
-        audit = f'[Emailed {emailed_to} - "{subject}" - {stamp}]'
+        sender = f" - by {by}" if by else ""
+        audit = f'[Emailed {emailed_to} - "{subject}" - {stamp}{sender}]'
         notes = f"{notes}\n\n{audit}" if notes.strip() else audit
     job.follow_up_notes = notes
 

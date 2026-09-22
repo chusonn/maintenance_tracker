@@ -1,4 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from ..extensions import db
 from ..models import Contractor
@@ -49,7 +50,7 @@ def edit(contractor_id: int):
 @bp.route("/<int:contractor_id>/delete", methods=["POST"])
 def delete(contractor_id: int):
     contractor = db.get_or_404(Contractor, contractor_id)
-    contractor.soft_delete()
+    contractor.soft_delete(by=current_user.name)
     db.session.commit()
     flash(
         f"Contractor {contractor.name} moved to the recycle bin. "

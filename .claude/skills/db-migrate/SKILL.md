@@ -5,11 +5,11 @@ description: Add or change database schema (new column, new table, backfill) in 
 
 # Schema changes
 
-This project uses **idempotent, additive, PRAGMA-based migrations** (see `migrate.py`), not Alembic. SQLite here never drops or alters columns — it only ADDs them and backfills.
+This project uses **idempotent, additive, PRAGMA-based migrations** (see `app/db_migrate.py`), not Alembic. SQLite here never drops or alters columns — it only ADDs them and backfills.
 
 Procedure for any schema change:
 
-1. **Back up first**: with the server STOPPED, copy `instance/maintenance_tracker.db` to `backups/<name>_<timestamp>.db`.
+1. **Back up first**: `flask backup` (safe while the server runs — it uses the SQLite online-backup API; never file-copy the `.db` alone, the DB is in WAL mode).
 2. **Update the model** in the models file (add the column with a sensible default/nullable).
 3. **Add a migration step**: check column existence via `PRAGMA table_info(<table>)`; if missing, `ALTER TABLE <table> ADD COLUMN ...` and backfill with an `UPDATE`. Every step must be safe to run repeatedly (existence-checked) — migrations run on every startup.
 4. **Retired columns stay in SQLite** — remove them from the model only, and document the orphaned column in CLAUDE.md.

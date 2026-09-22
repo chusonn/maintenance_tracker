@@ -59,6 +59,11 @@ def ensure_schema() -> None:
                 )
             log.info("Added follow_up_count to maintenance_job")
 
+        if job_cols and "created_by" not in job_cols:
+            # No backfill: jobs logged before logins existed have no known author.
+            conn.execute(text("ALTER TABLE maintenance_job ADD COLUMN created_by VARCHAR(100)"))
+            log.info("Added created_by to maintenance_job")
+
         conn.commit()
 
     db.create_all()

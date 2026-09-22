@@ -22,6 +22,13 @@
 </div>
 {% endmacro %}
 
+{% macro deleted_meta(item) %}
+{{ item.deleted_at | ukdate }}
+{% if item.deleted_by and not item.deleted_by.startswith(('cascade:', 'migration:')) %}
+<div class="mt-meta">by {{ item.deleted_by }}</div>
+{% endif %}
+{% endmacro %}
+
 {% block content %}
 {{ page_header('Recycle Bin', 'Deleted items can be restored or removed permanently') }}
 
@@ -61,7 +68,7 @@
                         <span class="mt-meta">with flat</span>
                         {% endif %}
                     </td>
-                    <td>{{ job.deleted_at | ukdate }}</td>
+                    <td>{{ deleted_meta(job) }}</td>
                     <td>{{ restore_purge('job', job, 'this job') }}</td>
                 </tr>
                 {% endfor %}
@@ -96,7 +103,7 @@
                     <td>{{ flat.address | truncate(44) }}</td>
                     <td>{{ flat.tenant_name or '—' }}</td>
                     <td>{{ flat.rent_amount | gbp }}</td>
-                    <td>{{ flat.deleted_at | ukdate }}</td>
+                    <td>{{ deleted_meta(flat) }}</td>
                     <td>{{ restore_purge('flat', flat, 'this flat AND all its jobs') }}</td>
                 </tr>
                 {% endfor %}
@@ -129,7 +136,7 @@
                     <td class="primary">{{ contractor.name }}</td>
                     <td>{{ contractor.company or '—' }}</td>
                     <td><span class="mt-badge tone-neutral">{{ contractor.specialty or 'General' }}</span></td>
-                    <td>{{ contractor.deleted_at | ukdate }}</td>
+                    <td>{{ deleted_meta(contractor) }}</td>
                     <td>{{ restore_purge('contractor', contractor, 'this contractor') }}</td>
                 </tr>
                 {% endfor %}

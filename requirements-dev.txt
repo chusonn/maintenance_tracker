@@ -1,5 +1,5 @@
 pytest==9.1.1
-ruff==0.15.21
+ruff==0.16.8
 # Local SMTP sink for testing follow-up emails without a real provider:
 #   python -m aiosmtpd -n -l localhost:1025   (+ SMTP_STARTTLS=0 in .env)
 aiosmtpd==1.4.6

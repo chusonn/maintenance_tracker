@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Sign in - Maintenance Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body>
+{% from "_icons.html" import icon %}
+{% from "_components.html" import csrf %}
+<main class="mt-auth">
+    <div class="mt-auth-card">
+        <div class="mt-auth-brand">
+            <span class="mt-logo">{{ icon('wrench', 16) }}</span>
+            Maintenance Tracker
+        </div>
+
+        <div class="mt-toast-region" aria-live="polite">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="mt-toast {{ category if category in ['success', 'warning', 'danger', 'error', 'info'] else 'info' }}" role="status">
+                    <span class="mt-toast-accent"></span>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            {% endwith %}
+        </div>
+
+        <div class="mt-card">
+            <div class="mt-card-header">
+                <h1 class="mt-card-title">Sign in</h1>
+                {{ icon('lock', 16) }}
+            </div>
+            <div class="mt-card-body">
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    {{ csrf() }}
+                    {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" name="email" id="email" class="form-control" value="{{ email }}"
+                               autocomplete="username" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" id="password" class="form-control"
+                               autocomplete="current-password" required>
+                    </div>
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1" checked>
+                        <label class="form-check-label" for="remember">Keep me signed in on this device</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                </form>
+            </div>
+        </div>
+        <p class="mt-meta text-center mt-3 mb-0">Forgotten your password? Ask the other account holder to reset it.</p>
+    </div>
+</main>
+</body>
+</html>

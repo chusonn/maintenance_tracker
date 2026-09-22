@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from ..extensions import db
 from ..models import ACTIVE_JOB_STATUSES, Flat
@@ -65,7 +66,7 @@ def _soft_delete_with_jobs(flat: Flat) -> None:
     for job in flat.maintenance_jobs:
         if not job.is_deleted:
             job.soft_delete(by="cascade:flat")
-    flat.soft_delete()
+    flat.soft_delete(by=current_user.name)
 
 
 @bp.route("/<int:flat_id>/delete", methods=["POST"])

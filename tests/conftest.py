@@ -6,6 +6,8 @@ from app import create_app
 from app.config import TestConfig
 from app.extensions import db as _db
 
+from .factories import make_user
+
 
 @pytest.fixture
 def app():
@@ -18,7 +20,26 @@ def app():
 
 
 @pytest.fixture
-def client(app):
+def user(app):
+    return make_user(name="Test User")
+
+
+def login_as(client, user):
+    """Sign a test client in without going through the form."""
+    with client.session_transaction() as session:
+        session["_user_id"] = str(user.id)
+        session["_fresh"] = True
+    return client
+
+
+@pytest.fixture
+def client(app, user):
+    """A signed-in client - every page except /login requires an account."""
+    return login_as(app.test_client(), user)
+
+
+@pytest.fixture
+def anon_client(app):
     return app.test_client()
 
 

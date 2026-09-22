@@ -2,8 +2,10 @@
 
 from datetime import date
 
+from werkzeug.security import generate_password_hash
+
 from app.extensions import db
-from app.models import Contractor, Flat, MaintenanceJob, MessageTemplate
+from app.models import Contractor, Flat, MaintenanceJob, MessageTemplate, User
 
 _counter = {"n": 0}
 
@@ -73,3 +75,17 @@ def make_job(flat: Flat | None = None, **overrides) -> MaintenanceJob:
     db.session.add(job)
     db.session.commit()
     return job
+
+
+TEST_PASSWORD = "correct horse battery"
+
+
+def make_user(password: str = TEST_PASSWORD, **overrides) -> User:
+    n = _next()
+    defaults = {"email": f"user{n}@example.com", "name": f"User {n}"}
+    user = User(**{**defaults, **overrides})
+    # Cheap hash keeps the suite fast; check_password_hash reads any method.
+    user.password_hash = generate_password_hash(password, method="pbkdf2:sha256:1000")
+    db.session.add(user)
+    db.session.commit()
+    return user

@@ -41,6 +41,7 @@
             <div class="mt-card-body">
                 <p class="mb-2"><span class="mt-meta">Status</span><br>{{ status_badge(job.status) }}</p>
                 <p class="mb-2"><span class="mt-meta">Reported</span><br>{{ job.reported_date | ukdate }}</p>
+                {% if job.created_by %}<p class="mb-2"><span class="mt-meta">Logged by</span><br>{{ job.created_by }}</p>{% endif %}
                 {% if job.scheduled_date %}
                 <p class="mb-2"><span class="mt-meta">Scheduled</span><br>{{ job.scheduled_date | ukdate }}</p>
                 {% endif %}

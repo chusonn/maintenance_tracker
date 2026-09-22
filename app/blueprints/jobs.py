@@ -10,6 +10,7 @@ from flask import (
     send_file,
     url_for,
 )
+from flask_login import current_user
 from sqlalchemy import func, or_, select
 
 from ..extensions import db
@@ -130,6 +131,7 @@ def add():
             priority=request.form["priority"],
             estimated_cost=estimated_cost,
             reported_date=date.today(),
+            created_by=current_user.name,
         )
         db.session.add(job)
         db.session.commit()
@@ -263,7 +265,13 @@ def followup(job_id: int):
             except emailer.EmailSendError as exc:
                 flash(str(exc), "danger")
                 return _render_composer(job, form)
-            record_followup(job, notes, emailed_to=form["recipient"], subject=form["subject"])
+            record_followup(
+                job,
+                notes,
+                emailed_to=form["recipient"],
+                subject=form["subject"],
+                by=current_user.name,
+            )
             db.session.commit()
             flash(
                 f"Follow-up #{job.follow_up_count} emailed to {form['recipient']}.",
@@ -336,6 +344,7 @@ def bulk_followup():
             f"Bulk follow-up sent using template '{template.name}'.",
             emailed_to=recipient,
             subject=rendered["subject"],
+            by=current_user.name,
         )
         sent.append(job.title)
     db.session.commit()
@@ -362,7 +371,7 @@ def bulk_followup():
 @bp.route("/<int:job_id>/delete", methods=["POST"])
 def delete(job_id: int):
     job = db.get_or_404(MaintenanceJob, job_id)
-    job.soft_delete()
+    job.soft_delete(by=current_user.name)
     db.session.commit()
     flash("Job moved to recycle bin. You can restore it from the Recycle Bin page.", "success")
     return redirect(url_for("jobs.index"))

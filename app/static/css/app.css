@@ -251,7 +251,8 @@ a:hover {
   color: var(--mt-text);
 }
 
-.mt-sidebar-brand .mt-logo {
+.mt-sidebar-brand .mt-logo,
+.mt-auth-brand .mt-logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -819,4 +820,60 @@ a:hover {
 .mt-chart-table .mt-table {
   margin-top: var(--mt-space-2);
   width: 100%;
+}
+
+/* ============ Accounts: topbar user chip + sign-in page ============ */
+
+.mt-user-chip {
+  align-items: center;
+  gap: var(--mt-space-1);
+  font-size: var(--mt-text-sm);
+  color: var(--mt-text-secondary);
+  padding: 0 var(--mt-space-2);
+}
+
+.mt-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mt-space-6) var(--mt-space-4);
+  background: var(--mt-bg);
+}
+
+.mt-auth-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.mt-auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mt-space-2);
+  font-weight: 600;
+  font-size: var(--mt-text-lg);
+  color: var(--mt-text);
+  margin-bottom: var(--mt-space-5);
+}
+
+.mt-auth .mt-toast-region {
+  position: static;
+  max-width: none;
+  margin-bottom: var(--mt-space-4);
+}
+
+.mt-inline-details summary {
+  font-size: var(--mt-text-xs);
+  color: var(--mt-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.mt-inline-details summary:hover {
+  color: var(--mt-text-secondary);
+}
+
+.mt-inline-input {
+  max-width: 280px;
 }

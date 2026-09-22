@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
+from flask_login import UserMixin
 from sqlalchemy import Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from .extensions import db
 
@@ -43,6 +45,35 @@ class SoftDeleteMixin:
         self.is_deleted = False
         self.deleted_at = None
         self.deleted_by = None
+
+
+class User(UserMixin, db.Model):
+    """A login account. There is no public sign-up: accounts are added by an
+    existing user on the Settings page, via `flask create-user`, or from the
+    INITIAL_USER_* env vars on first start. Disabling (not deleting) removes
+    access while keeping names in the audit fields intact."""
+
+    __tablename__ = "app_user"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(120), unique=True)
+    name: Mapped[str] = mapped_column(String(100))
+    password_hash: Mapped[str] = mapped_column(String(255))
+    is_enabled: Mapped[bool] = mapped_column(default=True)
+    failed_logins: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    @property
+    def is_active(self) -> bool:  # Flask-Login refuses to log in inactive users
+        return self.is_enabled
+
+    def set_password(self, password: str) -> None:
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        return check_password_hash(self.password_hash, password)
 
 
 class Flat(SoftDeleteMixin, db.Model):
@@ -114,6 +145,8 @@ class MaintenanceJob(SoftDeleteMixin, db.Model):
     follow_up_date: Mapped[datetime | None] = mapped_column(DateTime)
     follow_up_notes: Mapped[str | None] = mapped_column(Text)
 
+    # Name of the user who logged the job (added Sept 2026; older rows are NULL).
+    created_by: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
